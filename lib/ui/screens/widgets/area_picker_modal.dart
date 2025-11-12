@@ -34,15 +34,15 @@ class _AreaPickerModalState extends State<AreaPickerModal> {
     try {
       if (forceSync) {
         setState(() => _syncing = true);
-        await widget.syncService.syncAreasIfNeeded();
+       // await widget.syncService.syncAreasIfNeeded();
         setState(() => _syncing = false);
       } else {
         // syncAreasIfNeeded hará la comprobación de versión y solo sincronizará si hace falta.
-        await widget.syncService.syncAreasIfNeeded();
+     //   await widget.syncService.syncAreasIfNeeded();
       }
 
-      final local = await widget.repo.getAreas();
-      setState(() => _areas = local);
+    //  final local = await widget.repo.getAreas();
+    //  setState(() => _areas = local);
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {

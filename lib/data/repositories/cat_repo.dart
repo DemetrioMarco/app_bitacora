@@ -1,80 +1,84 @@
-// lib/data/repositories/catalog_repo.dart
-import 'dart:convert';
+// lib/data/repositories/cat_repo.dart (fragmento)
 import 'package:sqflite/sqflite.dart';
 import '../../models/area.dart';
-import '../local_db.dart';
+import '../../models/tipo_limpieza.dart';
 
 class CatalogRepo {
-  final LocalDB _localDb = LocalDB();
+  final Database db;
 
-  Future<List<Area>> getAreas() async {
-    final db = await _localDb.db;
-    final rows = await db.query('areas', orderBy: 'nombre COLLATE NOCASE');
-    return rows.map((r) {
-      final raw = r['raw_json'] as String?;
-      if (raw != null && raw.isNotEmpty) {
-        // mantener consistencia con Area.fromJson
-        return Area.fromJson(Map<String, dynamic>.from(jsonDecode(raw)));
-      }
-      return Area.fromJson({
-        'id': r['id'],
-        'nombre': r['nombre'],
-        'activo': r['activo']?.toString(),
-        'fecha_creacion': r['fecha_creacion'],
-        'fecha_actualizacion': r['fecha_actualizacion'],
-      });
-    }).toList();
+  CatalogRepo(this.db);
+
+  Future<bool> catalogVersionIsEmpty() async {
+    final res = await db.rawQuery('SELECT COUNT(1) AS c FROM catalogo_version');
+    final c = Sqflite.firstIntValue(res) ?? 0;
+    return c == 0;
   }
 
-  Future<void> upsertArea(Area area) async {
-    final db = await _localDb.db;
-    final raw = jsonEncode(area.toJson());
-    await db.insert(
-      'areas',
-      {
-        'id': area.id,
-        'nombre': area.nombre,
-        'activo': area.activo ? 1 : 0,
-        'fecha_creacion': area.fechaCreacion.toIso8601String(),
-        'fecha_actualizacion': area.fechaActualizacion.toIso8601String(),
-        'raw_json': raw,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
+  Future<void> createCatalogTablesIfNeeded() async {
+    // Si ya tienes SQL en otro lado, usa ese código. Aquí un ejemplo mínimo:
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS catalogo_version (
+        table_name TEXT PRIMARY KEY,
+        version TEXT,
+        updated_at TEXT
+      )
+    ''');
 
-  Future<void> upsertAreasList(List<Area> areas) async {
-    final db = await _localDb.db;
-    final batch = db.batch();
-    for (final a in areas) {
-      batch.insert(
-        'areas',
-        {
-          'id': a.id,
-          'nombre': a.nombre,
-          'activo': a.activo ? 1 : 0,
-          'fecha_creacion': a.fechaCreacion.toIso8601String(),
-          'fecha_actualizacion': a.fechaActualizacion.toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
+    // solo ejemplo de tablas; si ya existen tablas concretas, no sobrescribir
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS areas (
+        id INTEGER PRIMARY KEY,
+        nombre TEXT,
+        fecha_actualizacion TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS tipos_limpieza (
+        id INTEGER PRIMARY KEY,
+        nombre TEXT,
+        fecha_creacion TEXT
+      )
+    ''');
+
+    // crea tablas equipos y frecuencias según tu modelo...
   }
 
   Future<String?> getLocalVersion(String tableName) async {
-    final db = await _localDb.db;
-    final rows = await db.query('catalogos_version', where: 'table_name = ?', whereArgs: [tableName]);
+    final rows = await db.query(
+      'catalogo_version',
+      columns: ['version'],
+      where: 'table_name = ?',
+      whereArgs: [tableName],
+      limit: 1,
+    );
     if (rows.isEmpty) return null;
-    return rows.first['version'] as String?;
+    return rows.first['version']?.toString();
   }
 
-  Future<void> setLocalVersion(String tableName, String version, {String? updatedAt}) async {
-    final db = await _localDb.db;
+  Future<void> setLocalVersion(String tableName, String version, {required String updatedAt}) async {
     await db.insert(
-      'catalogos_version',
+      'catalogo_version',
       {'table_name': tableName, 'version': version, 'updated_at': updatedAt},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
+  Future<void> upsertAreasList(List<Area> list) async {
+    final batch = db.batch();
+    for (final a in list) {
+      batch.insert('areas', a.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> upsertTiposLimpiezaList(List<TipoLimpieza> list) async {
+    final batch = db.batch();
+    for (final t in list) {
+      batch.insert('tipos_limpieza', t.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  // Implementa upsertEquiposList y upsertFrecuenciaList según tus modelos...
 }
