@@ -25,7 +25,7 @@ class SyncService {
     final isEmpty = await repo.catalogVersionIsEmpty();
     if (isEmpty) {
       // primer arranque: crear tablas si hiciera falta y sembrar
-      await repo.createCatalogTablesIfNeeded();
+    //  await repo.createCatalogTablesIfNeeded();
       await seedCatalogsFirstTime();
     } else {
       // sincronización normal

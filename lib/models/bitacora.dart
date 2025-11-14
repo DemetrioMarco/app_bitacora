@@ -1,5 +1,5 @@
 class Bitacora {
-  final int id;
+  final int? id;
   final DateTime fecha;
   final String area;
   final String equipo;
@@ -8,7 +8,7 @@ class Bitacora {
   final String linea;
 
   Bitacora({
-    required this.id,
+    this.id,
     required this.fecha,
     required this.area,
     required this.equipo,

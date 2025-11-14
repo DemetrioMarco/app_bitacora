@@ -1,7 +1,9 @@
 // lib/ui/screens/bitacoras_list.dart
 import 'package:app_bitacora/ui/screens/bitacora_form.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/bitacora.dart';
+import '../../provider/bitacora_provider.dart';
 import '../screens/widgets/bitacora_item.dart';
 import 'programar_visita_dialog.dart';
 
@@ -13,46 +15,72 @@ class BitacorasListScreen extends StatefulWidget {
 }
 
 class _BitacorasListScreenState extends State<BitacorasListScreen> {
-  final List<Bitacora> _bitacoras = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Cargar bitácoras después del primer frame para poder acceder al context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadBitacoras();
+    });
+  }
+
+  Future<void> _loadBitacoras() async {
+    final provider = Provider.of<BitacoraProvider>(context, listen: false);
+    await provider.cargarBitacoras();
+  }
 
   Future<void> _refresh() async {
-    // TODO: reemplazar por bitacoraRepo.getAll()
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() {});
+    final provider = Provider.of<BitacoraProvider>(context, listen: false);
+    await provider.cargarBitacoras();
   }
 
   Future<void> _openProgramarModal() async {
     final newBitacora = await showModalBottomSheet<Bitacora>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
       builder: (_) => const ProgramarVisitaForm(),
     );
 
+    if (!mounted) return;
+
     if (newBitacora != null) {
-      // TODO: en vez de solo memoria: insertar en DB con bitacoraRepo.insertBitacora(...)
-      setState(() => _bitacoras.insert(0, newBitacora));
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Visita programada (guardada localmente)')));
+      final provider = Provider.of<BitacoraProvider>(context, listen: false);
+      await provider.cargarBitacoras();
+          
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Visita programada (guardada localmente)')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<BitacoraProvider>(context);
+    final List<Bitacora> bitacoras = provider.bitacoras;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Bitácoras')),
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: _bitacoras.isEmpty
-            ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: const [
-                SizedBox(height: 120),
-                Center(child: Text('No hay bitácoras. Presiona + para crear una.')),
-              ])
+        child: bitacoras.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                    SizedBox(height: 120),
+                    Center(
+                        child: Text(
+                            'No hay bitácoras. Presiona + para crear una.')),
+                  ])
             : ListView.separated(
                 padding: const EdgeInsets.all(12),
-                itemCount: _bitacoras.length,
+                itemCount: bitacoras.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
-                  final b = _bitacoras[i];
+                  final b = bitacoras[i];
                   return BitacoraItem(
                     bitacora: b,
                     onTap: () {
@@ -63,23 +91,22 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                     },
                     onEdit: () async {
                       final result = await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => BitacoraFormScreen(bitacora: b)),
+                        MaterialPageRoute(
+                            builder: (_) => BitacoraFormScreen(bitacora: b)),
                       );
                       if (result != null && result is Map) {
-                        // result['bitacora'] -> objeto actualizado
-                        // result['checklist'] -> lista de mapas de checklist
-                        // TODO: persistir en DB con bitacoraRepo.updateBitacora(...) y saveChecklistItems(...)
-                        setState(() {
-                          // si guardas localmente en memoria: actualizar elemento en _bitacoras
-                          _bitacoras[i] = result['bitacora'] as Bitacora;
-                        });
-  }
-},
+                        // Si el formulario devolvió cambios, recargamos la lista desde la BD
+                        await provider.cargarBitacoras();
+                        // Si quieres puedes buscar el índice y actualizar sólo ese elemento en memoria
+                        // pero recargar es simple y garantiza sincronía con la BD
+                      }
+                    },
                   );
                 },
               ),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: _openProgramarModal, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+          onPressed: _openProgramarModal, child: const Icon(Icons.add)),
     );
   }
 }

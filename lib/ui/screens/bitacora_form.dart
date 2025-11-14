@@ -2,33 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/bitacora.dart';
+import '../../models/check_item.dart';
 import '../screens/widgets/checklist_item.dart';
 import 'observacion_dialog.dart';
 import 'signature_screen.dart';
 
-class CheckItem {
-  int id;
-  String title;
-  bool checked;
-  String? observacion;
-  int orden;
 
-  CheckItem({
-    required this.id,
-    required this.title,
-    this.checked = false,
-    this.observacion,
-    required this.orden,
-  });
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'checked': checked ? 1 : 0,
-        'observacion': observacion,
-        'orden': orden,
-      };
-}
 
 class BitacoraFormScreen extends StatefulWidget {
   final Bitacora bitacora;
@@ -194,7 +173,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                           ],
                         ),
                     
-                      const SizedBox(width: 25),
+                      const SizedBox(width: 10),
                       Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -203,7 +182,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                             _readOnlyField('Tipo de limpieza:', _tipoLimpieza),
                           ],
                         ),
-                      const SizedBox(width: 25),
+                      const SizedBox(width: 10),
                       Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

@@ -1,4 +1,6 @@
-// lib/ui/screens/programar_visita_dialog.dart
+import 'package:app_bitacora/data/controller/bitacora_controller.dart';
+import 'package:app_bitacora/data/controller/cat_controller.dart';
+import 'package:app_bitacora/models/equipo.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/bitacora.dart';
@@ -14,28 +16,39 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
   String? _selectedArea;
-  String? _selectedEquipo;
+  Equipo? _selectedEquipo;
   String? _selectedTipo;
   String? _selectedFrecuencia;
   String? _selectedLinea;
 
+  // Repositorio
+  final BitacoraController controller = BitacoraController();
+  final CatalogController catController =  CatalogController();
+
   // Catálogos en duro (reemplazar por repo después)
-  final List<String> _areas = ['Planta A', 'Planta B', 'Almacén'];
-  final List<String> _equipos = ['Equipo 1', 'Equipo 2', 'Equipo 3'];
+  final List<String> _areas = ['Líquidos', 'Planta', 'Almacén'];
   final List<String> _tipos = ['Rutina', 'Correctiva', 'Inspección'];
   final List<String> _frecuencias = ['Diaria', 'Semanal', 'Quincenal', 'Mensual'];
   final List<String> _linea = ['1','2','3','4'];
+  List<Equipo> _equipos = [];
 
-  int _nextId() => DateTime.now().millisecondsSinceEpoch.remainder(1000000);
 
   @override
   void initState() {
     super.initState();
     _selectedArea = _areas.first;
-    _selectedEquipo = _equipos.first;
     _selectedTipo = _tipos.first;
     _selectedFrecuencia = _frecuencias[2];
     _selectedLinea = _linea.first;
+    _cargarEquipos();
+  }
+
+  Future<void> _cargarEquipos() async {
+    final equipos = await catController.obtenerEquipos();
+    setState(() {
+      _equipos = equipos;
+      _selectedEquipo = _equipos.isNotEmpty ? _equipos.first : null;
+    });
   }
 
   Future<void> _pickDate() async {
@@ -56,21 +69,40 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
     }
   }
 
-  void _onProgramar() {
+  bool _saving = false;
+
+  Future<void> _onProgramar() async {
+    if(_saving) return;
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _saving = true);
+
     final newBitacora = Bitacora(
-      id: _nextId(),
       fecha: _selectedDate,
       area: _selectedArea!,
-      equipo: _selectedEquipo!,
+      equipo: _selectedEquipo!.nombre,
       tipoLimpieza: _selectedTipo!,
       frecuencia: _selectedFrecuencia!,
       linea: _selectedLinea!,
     );
 
-    // Si quisieras: aquí insertar directamente en bitacoraRepo.insert(...)
-    Navigator.of(context).pop(newBitacora);
+    try {
+      final saved = await controller.guardar(newBitacora);
+      if(!mounted) return;
+      Navigator.of(context).pop(saved);
+    } catch (e, st) {
+      debugPrint('Error guardando bitácora: $e\n$st');
+      if(!mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al guardar la visita'))
+        );
+      }
+    } finally {
+      if(mounted) setState(() => _saving = false );
+    }
+
+    
+
   }
 
   @override
@@ -98,12 +130,16 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
                 )
               ]),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<Equipo>(
                 initialValue: _selectedEquipo,
-                items: _equipos.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                items: _equipos
+                  .map((e) => DropdownMenuItem<Equipo>(
+                    value: e, 
+                    child: Text(e.nombre))
+                  ).toList(),
                 onChanged: (v) => setState(() => _selectedEquipo = v),
                 decoration: const InputDecoration(labelText: 'Seleccione equipo'),
-                validator: (v) => v == null || v.isEmpty ? 'Seleccione equipo' : null,
+                validator: (v) => v == null ? 'Seleccione equipo' : null,
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
@@ -133,7 +169,12 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
               Row(children: [
                 Expanded(child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))),
                 const SizedBox(width: 12),
-                Expanded(child: ElevatedButton(onPressed: _onProgramar, child: const Text('Programar'))),
+                Expanded(child: 
+                  ElevatedButton(
+                    onPressed: _saving ? null : _onProgramar, 
+                    child: _saving
+                      ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2,),)
+                      : const Text('Programar'))),
               ]),
               const SizedBox(height: 8),
             ]),

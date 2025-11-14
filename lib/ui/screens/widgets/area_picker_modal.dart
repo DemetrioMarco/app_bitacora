@@ -17,7 +17,7 @@ class _AreaPickerModalState extends State<AreaPickerModal> {
   bool _loading = true;
   bool _syncing = false;
   String? _error;
-  List<Area> _areas = [];
+  final List<Area> _areas = [];
 
   @override
   void initState() {

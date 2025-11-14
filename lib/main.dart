@@ -1,10 +1,24 @@
 // lib/main.dart
+
+import 'package:app_bitacora/services/seed_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'data/local_db.dart';
+import 'provider/bitacora_provider.dart';
 import 'ui/screens/bitacoras_list.dart'; // ruta según tu proyecto
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  await LocalDB.instance.db;
+  await SeedService.seedIfNeeded();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => BitacoraProvider())
+      ],
+      child: const MyApp(),)
+    );
 }
 
 class MyApp extends StatelessWidget {

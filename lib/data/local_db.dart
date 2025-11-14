@@ -4,13 +4,13 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class LocalDB {
-  static final LocalDB _instance = LocalDB._internal();
-  factory LocalDB() => _instance;
+  static final LocalDB instance = LocalDB._internal();
+  factory LocalDB() => instance;
   LocalDB._internal();
 
   static Database? _db;
   static const _dbName = 'saferfs.db';
-  static const _dbVersion = 2;
+  static const _dbVersion = 1;
 
   Future<Database> get db async {
     if (_db != null) return _db!;
@@ -20,8 +20,16 @@ class LocalDB {
 
   Future<Database> _init() async {
     final path = join(await getDatabasesPath(), _dbName);
+
+    if (kDebugMode) {
+      print('Path:\n$path');
+      deleteDatabase(path);
+      print('Elimando BD');
+    }
+
     
-    return openDatabase(path, version: _dbVersion, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return openDatabase(path,
+        version: _dbVersion, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -32,9 +40,6 @@ class LocalDB {
         updated_at TEXT
       )
     ''';
-    if (kDebugMode) {
-      print('Executing onCreate SQL1:\n$sql1');
-    }
     await db.execute(sql1);
 
     const sql2 = '''
@@ -46,11 +51,7 @@ class LocalDB {
         fecha_actualizacion TEXT
       )
     ''';
-    if (kDebugMode) {
-      print('Executing onCreate SQL2:\n$sql2');
-    }
     await db.execute(sql2);
-
 
     await db.execute('''
     CREATE TABLE IF NOT EXISTS tipos_limpieza (
@@ -59,6 +60,66 @@ class LocalDB {
       activo INTEGER,
       fecha_creacion TEXT
     )
+    ''');
+
+    const sqlBitacora = '''
+      CREATE TABLE IF NOT EXISTS bitacoras (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT NOT NULL,
+        area TEXT NOT NULL,
+        equipo TEXT NOT NULL,
+        tipo_limpieza TEXT NOT NULL,
+        frecuencia TEXT NOT NULL,
+        linea TEXT NOT NULL
+      )
+    ''';
+    await db.execute(sqlBitacora);
+    if (kDebugMode) {
+      print('Execute onCreate sqlBitacora:\n$sqlBitacora');
+    }
+
+    const sqlEquipo = '''
+      CREATE TABLE IF NOT EXISTS equipos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL UNIQUE
+      )
+    ''';
+    await db.execute(sqlEquipo);
+    if (kDebugMode) {
+      print('Execute onCreate sqlBitacora:\n$sqlEquipo');
+    }
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS elementos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS equipo_elemento (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        equipo_id INTEGER NOT NULL,
+        elemento_id INTEGER NOT NULL,
+
+        UNIQUE(equipo_id, elemento_id),
+        FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE,
+        FOREIGN KEY (elemento_id) REFERENCES elementos(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS checklist_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bitacora_id INTEGER NOT NULL,
+        elemento_id INTEGER NOT NULL,
+        titulo TEXT NOT NULL,
+        checked INTEGER NOT NULL DEFAULT 0,
+        observacion TEXT,
+        orden INTEGER,
+        FOREIGN KEY (bitacora_id) REFERENCES bitacoras(id) ON DELETE CASCADE,
+        FOREIGN KEY (elemento_id) REFERENCES elementos(id) ON DELETE SET NULL
+      )
     ''');
   }
 

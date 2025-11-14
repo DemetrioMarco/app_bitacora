@@ -1,6 +1,9 @@
 // lib/data/repositories/cat_repo.dart (fragmento)
+import 'package:app_bitacora/models/equipo_elemento.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../models/area.dart';
+import '../../models/elemento.dart';
+import '../../models/equipo.dart';
 import '../../models/tipo_limpieza.dart';
 
 class CatalogRepo {
@@ -12,36 +15,6 @@ class CatalogRepo {
     final res = await db.rawQuery('SELECT COUNT(1) AS c FROM catalogo_version');
     final c = Sqflite.firstIntValue(res) ?? 0;
     return c == 0;
-  }
-
-  Future<void> createCatalogTablesIfNeeded() async {
-    // Si ya tienes SQL en otro lado, usa ese código. Aquí un ejemplo mínimo:
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS catalogo_version (
-        table_name TEXT PRIMARY KEY,
-        version TEXT,
-        updated_at TEXT
-      )
-    ''');
-
-    // solo ejemplo de tablas; si ya existen tablas concretas, no sobrescribir
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS areas (
-        id INTEGER PRIMARY KEY,
-        nombre TEXT,
-        fecha_actualizacion TEXT
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS tipos_limpieza (
-        id INTEGER PRIMARY KEY,
-        nombre TEXT,
-        fecha_creacion TEXT
-      )
-    ''');
-
-    // crea tablas equipos y frecuencias según tu modelo...
   }
 
   Future<String?> getLocalVersion(String tableName) async {
@@ -80,5 +53,50 @@ class CatalogRepo {
     await batch.commit(noResult: true);
   }
 
-  // Implementa upsertEquiposList y upsertFrecuenciaList según tus modelos...
+  Future<List<Equipo>>getAllEquipos() async {
+    final row = await db.query('equipos');
+    return row.map((e) => Equipo.fromMap(e)).toList();
+  }
+
+  Future<Elemento>getElemento(int id) async {
+    final rows = await db.query(
+      'elemento',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1
+      );
+    return Elemento.fromMap(rows.first);
+  }
+
+  Future<void> insertEquipo (Equipo equipo) async {
+    final map = Map<String, Object?>.from(equipo.toMap());
+    await db.insert('equipos', map);
+  }
+
+  Future<void> insertElemento(Elemento e) async {
+    final map = Map<String, Object?>.from(e.toMap());
+    await db.insert('elementos', map);
+  }
+
+  Future<void> insertEquipoElemento(EquipoElemento e) async {
+    final map = Map<String, Object?>.from(e.toMap());
+    await db.insert('equipo_elemento', map);
+  }
+
+  Future<List<EquipoElemento>> getChecklistByEquipo(int equipoId) async {
+  final List<Map<String, dynamic>> maps = await db.query(
+    'equipo_elemento',
+    where: 'equipoId = ?',
+    whereArgs: [equipoId],
+    orderBy: 'orden ASC',
+  );
+
+  return maps.map((m) => EquipoElemento(
+    equipoId: m['equipoId'] as int,
+    elementoId: m['elementoId'] as int,
+    orden: m['orden'] as int,
+  )).toList();
+}
+
+
 }
