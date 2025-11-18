@@ -81,6 +81,7 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
       fecha: _selectedDate,
       area: _selectedArea!,
       equipo: _selectedEquipo!.nombre,
+      equipoId: _selectedEquipo!.id ?? 1,
       tipoLimpieza: _selectedTipo!,
       frecuencia: _selectedFrecuencia!,
       linea: _selectedLinea!,

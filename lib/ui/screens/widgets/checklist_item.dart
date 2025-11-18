@@ -1,6 +1,6 @@
 // lib/ui/widgets/checklist_item_widget.dart
 import 'package:flutter/material.dart';
-import '/ui/screens/bitacora_form.dart'; // para CheckItem (o exporta desde models)
+import '../../../models/check_item.dart';
 
 typedef OnCheckedChanged = void Function(bool checked);
 

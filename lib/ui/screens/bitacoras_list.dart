@@ -1,4 +1,5 @@
 // lib/ui/screens/bitacoras_list.dart
+import 'package:app_bitacora/data/controller/cat_controller.dart';
 import 'package:app_bitacora/ui/screens/bitacora_form.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -61,6 +62,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<BitacoraProvider>(context);
     final List<Bitacora> bitacoras = provider.bitacoras;
+    final CatalogController catalogController = CatalogController();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Bitácoras')),
@@ -81,27 +83,37 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final b = bitacoras[i];
-                  return BitacoraItem(
-                    bitacora: b,
-                    onTap: () {
-                      // TODO: abrir detalle/editar
-                    },
-                    onShare: () {
-                      // TODO: implementar compartir
-                    },
-                    onEdit: () async {
-                      final result = await Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => BitacoraFormScreen(bitacora: b)),
-                      );
-                      if (result != null && result is Map) {
-                        // Si el formulario devolvió cambios, recargamos la lista desde la BD
-                        await provider.cargarBitacoras();
-                        // Si quieres puedes buscar el índice y actualizar sólo ese elemento en memoria
-                        // pero recargar es simple y garantiza sincronía con la BD
-                      }
-                    },
-                  );
+                  return FutureBuilder(
+                    future: catalogController.tieneChecklist(b.id!), 
+                    builder: (context, snapshot){
+                      final locked = snapshot.data ?? false;
+                        return BitacoraItem(
+                          bitacora: b,
+                          locked: locked,
+                          onTap: () {
+                            // TODO: abrir detalle/editar
+                          },
+                          onShare: locked
+                            ? null
+                            : ()async {
+                            final result = await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => BitacoraFormScreen(bitacora: b)),
+                            );
+                            if (result != null && result is Map) {
+                              // Si el formulario devolvió cambios, recargamos la lista desde la BD
+                              await provider.cargarBitacoras();
+                              // Si quieres puedes buscar el índice y actualizar sólo ese elemento en memoria
+                              // pero recargar es simple y garantiza sincronía con la BD
+                            }
+                          },
+                          onEdit: ()  {
+                          
+                          },
+                        );
+                    }
+                    
+                    );
                 },
               ),
       ),

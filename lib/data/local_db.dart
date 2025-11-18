@@ -23,8 +23,8 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-      deleteDatabase(path);
-      print('Elimando BD');
+      // deleteDatabase(path);
+      // print('Elimando BD');
     }
 
     
@@ -68,6 +68,7 @@ class LocalDB {
         fecha TEXT NOT NULL,
         area TEXT NOT NULL,
         equipo TEXT NOT NULL,
+        equipo_id INTEGER NOT NULL,
         tipo_limpieza TEXT NOT NULL,
         frecuencia TEXT NOT NULL,
         linea TEXT NOT NULL
@@ -101,7 +102,7 @@ class LocalDB {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         equipo_id INTEGER NOT NULL,
         elemento_id INTEGER NOT NULL,
-
+        orden INTEGER NOT NULL,
         UNIQUE(equipo_id, elemento_id),
         FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE,
         FOREIGN KEY (elemento_id) REFERENCES elementos(id) ON DELETE CASCADE
@@ -119,6 +120,16 @@ class LocalDB {
         orden INTEGER,
         FOREIGN KEY (bitacora_id) REFERENCES bitacoras(id) ON DELETE CASCADE,
         FOREIGN KEY (elemento_id) REFERENCES elementos(id) ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS signatures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bitacora_id INTEGER NOT NULL,
+        firma_ejecuto TEXT,
+        firma_verifico TEXT,
+        firma_libero TEXT,
       )
     ''');
   }

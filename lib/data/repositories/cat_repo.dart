@@ -1,4 +1,6 @@
 // lib/data/repositories/cat_repo.dart (fragmento)
+import 'package:app_bitacora/models/check_item.dart';
+import 'package:app_bitacora/models/checklist_item.dart';
 import 'package:app_bitacora/models/equipo_elemento.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../models/area.dart';
@@ -83,20 +85,42 @@ class CatalogRepo {
     await db.insert('equipo_elemento', map);
   }
 
-  Future<List<EquipoElemento>> getChecklistByEquipo(int equipoId) async {
-  final List<Map<String, dynamic>> maps = await db.query(
-    'equipo_elemento',
-    where: 'equipoId = ?',
-    whereArgs: [equipoId],
-    orderBy: 'orden ASC',
+
+  Future<List<CheckItem>> getCheckItem(int equipoId) async {
+  final List<Map<String, dynamic>> rows = await db.rawQuery(
+    '''
+    SELECT  
+      e.id,
+      e.nombre AS nombre, 
+      ee.orden AS orden
+    FROM equipo_elemento ee 
+    JOIN  elementos e 
+      ON e.id = ee.elemento_id 
+    WHERE ee.equipo_id = ?
+    ORDER BY ee.orden ASC;
+    ''',
+    [equipoId]
   );
 
-  return maps.map((m) => EquipoElemento(
-    equipoId: m['equipoId'] as int,
-    elementoId: m['elementoId'] as int,
-    orden: m['orden'] as int,
+  return rows.map((e) => CheckItem(
+    id: e['id'] as int, 
+    title: e['nombre'] as String, 
+    orden: e['orden'] as int
   )).toList();
+ 
 }
 
+  Future<void> insertCheckList(ChecklistItem items) async {
+    final map = Map<String, Object?>.from(items.toMap());
+    await db.insert('checklist_items', map);
+  }
+
+  Future<int> countCheckForBitacora(int bitacoraId) async{
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM checklist_items WHERE bitacora_id = ?',
+      [bitacoraId]);
+    return Sqflite.firstIntValue(result) ?? 0;
+    
+  }
 
 }

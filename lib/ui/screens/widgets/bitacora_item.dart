@@ -8,6 +8,7 @@ class BitacoraItem extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onShare;
   final VoidCallback? onEdit;
+  final bool locked;
 
   const BitacoraItem({
     super.key,
@@ -15,6 +16,7 @@ class BitacoraItem extends StatelessWidget {
     this.onTap,
     this.onShare,
     this.onEdit,
+    this.locked = false,
   });
 
   @override
@@ -28,8 +30,8 @@ class BitacoraItem extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(icon: const Icon(Icons.edit), onPressed: onShare),
-            IconButton(icon: const Icon(Icons.check_circle), onPressed: onEdit),
+            IconButton(icon: Icon(Icons.check_circle, color: locked ? Colors.blue : Colors.grey), onPressed: onShare),
+            IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
           ],
         ),
       ),

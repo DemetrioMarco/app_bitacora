@@ -1,7 +1,7 @@
 class ChecklistItem {
   final int? id;
   final int bitacoraId;
-  final int? elementoId;
+  final int elementoId;
   final String titulo;
   final bool checked;
   final String? observacion;
@@ -10,7 +10,7 @@ class ChecklistItem {
   ChecklistItem({
     this.id,
     required this.bitacoraId,
-    this.elementoId,
+    required this.elementoId,
     required this.titulo,
     this.checked = false,
     this.observacion,
@@ -20,7 +20,7 @@ class ChecklistItem {
   factory ChecklistItem.fromMap(Map<String, dynamic> m) => ChecklistItem(
     id: m['id'] as int?,
     bitacoraId: m['bitacora_id'] as int,
-    elementoId: m['elemento_id'] as int?,
+    elementoId: m['elemento_id'] as int,
     titulo: m['titulo'] as String,
     checked: (m['checked'] as int) == 1,
     observacion: m['observacion'] as String?,

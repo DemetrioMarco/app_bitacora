@@ -1,7 +1,10 @@
+
+import '../../models/model.dart';
+
+
 import '../local_db.dart';
 import '../repositories/cat_repo.dart';
-import '../../models/equipo.dart';
-import '../../models/elemento.dart';
+
 
 class CatalogController {
   late final CatalogRepo repo;
@@ -20,5 +23,27 @@ class CatalogController {
     final db = await LocalDB.instance.db;
     final repo = CatalogRepo(db);
     return await repo.getElemento(id);
+  }
+
+  Future<List<CheckItem>> obtenerCheckItem(int equipoId) async {
+    final db = await LocalDB.instance.db;
+    final repo = CatalogRepo(db);
+    return await repo.getCheckItem(equipoId);
+  }
+
+  Future<void>guardarChecklist(List<ChecklistItem> items) async {
+    final db = await LocalDB.instance.db;
+    final repo =  CatalogRepo(db);
+
+    for(final item in items){
+      await repo.insertCheckList(item);
+    }
+  }
+
+  Future<bool> tieneChecklist(int bitacoraId) async{
+    final db = await LocalDB.instance.db;
+    final repo =  CatalogRepo(db);
+    final count = await repo.countCheckForBitacora(bitacoraId);
+    return count > 0;
   }
 }

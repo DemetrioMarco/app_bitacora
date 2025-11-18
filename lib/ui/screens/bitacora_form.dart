@@ -1,4 +1,7 @@
 // lib/ui/screens/bitacora_form.dart
+import 'package:app_bitacora/data/controller/bitacora_controller.dart';
+import 'package:app_bitacora/data/controller/cat_controller.dart';
+import 'package:app_bitacora/models/model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/bitacora.dart';
@@ -23,6 +26,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   late DateTime _fecha;
   late String _area;
   late String _equipo;
+  late int _equipoId;
   late String _tipoLimpieza;
   late String _frecuencia;
   late String _linea;
@@ -31,6 +35,8 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   final TextEditingController _liberaCtrl = TextEditingController();
 
   List<CheckItem> _checklist = [];
+  final CatalogController catalogController = CatalogController( );
+  final BitacoraController bitacoraController = BitacoraController();
 
   @override
   void initState() {
@@ -38,6 +44,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     _fecha = widget.bitacora.fecha;
     _area = widget.bitacora.area;
     _equipo = widget.bitacora.equipo;
+    _equipoId = widget.bitacora.equipoId;
     _tipoLimpieza = widget.bitacora.tipoLimpieza;
     _frecuencia = widget.bitacora.frecuencia;
     _linea = widget.bitacora.linea;
@@ -49,29 +56,12 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     _loadChecklist();
   }
 
-  void _loadChecklist() {
-    // TODO: reemplazar por llamado a repo que devuelva checklist real
-    _checklist = [
-      CheckItem(
-          id: 1,
-          title: 'Banco de apoyo, escalones y/o plataforma',
-          checked: false,
-          orden: 1),
-      CheckItem(id: 2, title: 'Motor', checked: false, orden: 2),
-      CheckItem(id: 3, title: 'Mangueras', checked: false, orden: 3),
-      CheckItem(id: 4, title: 'Tapa superior', checked: false, orden: 4),
-      CheckItem(id: 5, title: 'Cuerpo', checked: false, orden: 5),
-      CheckItem(
-          id: 6,
-          title: 'Parte superior (tanque lateral)',
-          checked: false,
-          orden: 6),
-      CheckItem(
-          id: 7, title: 'Cuerpo (tanque lateral)', checked: false, orden: 7),
-      CheckItem(
-          id: 8, title: 'Soporte estructurales', checked: false, orden: 8),
-      CheckItem(id: 9, title: 'Tanque lateral', checked: false, orden: 9),
-    ];
+  void _loadChecklist() async {
+  
+    final items = await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
+    setState(() {
+      _checklist = items;
+    });
   }
 
   Future<void> _openObservacion(CheckItem item) async {
@@ -99,7 +89,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     }
   }
 
-  void _onSave() {
+  void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
 
     final updated = Bitacora(
@@ -107,12 +97,28 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       fecha: _fecha,
       area: _area,
       equipo: _equipo,
+      equipoId: _equipoId,
       tipoLimpieza: _tipoLimpieza,
       frecuencia: _frecuencia,
       linea: _linea,
     );
 
     // TODO: persistir updated y checklist en repo/DB
+    final List<ChecklistItem> cli = _checklist.map((item){
+      return ChecklistItem(
+        bitacoraId: widget.bitacora.id!, 
+        elementoId: item.id, 
+        titulo: item.title,
+        checked: item.checked,
+        observacion: item.observacion,
+        orden: item.orden
+        );
+    }).toList();
+
+
+    await catalogController.guardarChecklist(cli);
+
+    if(!mounted) return;
 
     Navigator.of(context).pop({
       'bitacora': updated,
@@ -189,18 +195,12 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                             _readOnlyField('Línea:', _linea),
                             const SizedBox(height: 10),
                             _readOnlyField('Frecuencia:', _frecuencia),
-                            
                           ],
                         ),
                      
                     ],
                   )),
-              // const SizedBox(height: 12),
                const Divider(),
-              // const SizedBox(height: 8),
-              // const Text('Checklist',
-              //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-             // const SizedBox(height: 6),
               ..._checklist.map((item) {
                 return ChecklistItemWidget(
                   item: item,

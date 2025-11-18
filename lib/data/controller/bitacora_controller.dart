@@ -1,4 +1,5 @@
 import '../../models/bitacora.dart';
+import '../../models/model.dart';
 import '../repositories/bitacora_repo.dart';
 import '../local_db.dart';
 
@@ -26,5 +27,17 @@ class BitacoraController {
     final db = await LocalDB.instance.db;
     final repo = BitacoraRepo(db);
     return await repo.getForId(id);
+  }
+
+  Future<int> guardarFirma(Signature s) async {
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraRepo(db);
+    return await repo.insertSignature(s);
+  }
+
+  Future<int> agregarFirma(Signature s) async{
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraRepo(db);
+    return await repo.updateSignature(s);
   }
 }

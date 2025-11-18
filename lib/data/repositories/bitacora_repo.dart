@@ -1,4 +1,5 @@
 import 'package:app_bitacora/models/bitacora.dart';
+import 'package:app_bitacora/models/signature.dart';
 import 'package:sqflite/sqflite.dart';
 
 class BitacoraRepo {
@@ -16,6 +17,7 @@ class BitacoraRepo {
       fecha: bitacora.fecha, 
       area: bitacora.area, 
       equipo: bitacora.equipo, 
+      equipoId: bitacora.equipoId,
       tipoLimpieza: bitacora.tipoLimpieza, 
       frecuencia: bitacora.frecuencia, 
       linea: bitacora.linea
@@ -50,6 +52,52 @@ class BitacoraRepo {
       limit: 1,
     );
     return Bitacora.fromMap(rows.first);
+  }
+
+  Future<int> insertSignature(Signature s) async {
+    final map = Map<String, Object?>.from(s.toMap());
+    map.remove('id');
+    return await db.insert('signatures', map);
+  }
+
+  Future<Signature?> getSignatureByBitacoraId(int bitacoraId)async{
+    final res = await db.query(
+      'signatures',
+      where: 'bitacora_id = ?',
+      whereArgs: [bitacoraId],
+      limit: 1,
+    );
+
+    if(res.isEmpty) return null;
+    return Signature.fromMap(res.first);
+  }
+
+  Future<List<Signature>> getSignaturesByBitacoraId(int bitacoraId)async{
+    final res = await db.query(
+      'signatures',
+      where: 'bitacora_id = ?',
+      whereArgs: [bitacoraId]
+    );
+    return res.map((r) => Signature.fromMap(r)).toList();
+  }
+
+  Future<int> updateSignature(Signature s)async{
+    final map = Map<String, Object?>.from(s.toMap());
+    final id = s.id;
+    if(id == null) throw ArgumentError('Signature id is null for update');
+    return await db.update(
+      'signatures', 
+      map, 
+      where: 'id = ?',
+      whereArgs: [id] );
+  }
+
+  Future<int> deleteSignature(int id) async {
+    return await db.delete(
+      'signatures',
+      where: 'id = ?',
+      whereArgs: [id]
+    );
   }
 
 }

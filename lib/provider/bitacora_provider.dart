@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../data/controller/bitacora_controller.dart';
 import '../models/bitacora.dart';
+import '../data/controller/bitacora_controller.dart';
 
 
 class BitacoraProvider extends ChangeNotifier {
@@ -11,6 +11,8 @@ class BitacoraProvider extends ChangeNotifier {
 
   List<Bitacora> get bitacoras => _bitacoras;
   Bitacora? get bitacoraSeleccionada => _bitacoraSeleccionada;
+
+
 
   /// Carga todas las bitácoras desde la BD
   Future<void> cargarBitacoras() async {
