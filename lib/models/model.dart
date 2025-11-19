@@ -6,5 +6,5 @@ export 'checklist_item.dart';
 export 'elemento.dart';
 export 'equipo_elemento.dart';
 export 'equipo.dart';
-export 'signature.dart';
+export 'firma.dart';
 export 'tipo_limpieza.dart';

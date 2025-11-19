@@ -10,8 +10,6 @@ import '../screens/widgets/checklist_item.dart';
 import 'observacion_dialog.dart';
 import 'signature_screen.dart';
 
-
-
 class BitacoraFormScreen extends StatefulWidget {
   final Bitacora bitacora;
 
@@ -30,12 +28,22 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   late String _tipoLimpieza;
   late String _frecuencia;
   late String _linea;
-  final TextEditingController _ejecutaCtrl = TextEditingController();
+
+  TextEditingController _ejecutaCtrl = TextEditingController();
   final TextEditingController _verificaCtrl = TextEditingController();
   final TextEditingController _liberaCtrl = TextEditingController();
 
+  bool _ejecutaFirmado = false;
+  bool _verificaFirmado = false;
+  bool _liberaFirmado = false;
+
+  int? _signatureRowId;
+  String? _firmaEjecutoBase64;
+  String? _firmaVerificoBase64;
+  String? _firmaLiberaBase64;
+
   List<CheckItem> _checklist = [];
-  final CatalogController catalogController = CatalogController( );
+  final CatalogController catalogController = CatalogController();
   final BitacoraController bitacoraController = BitacoraController();
 
   @override
@@ -54,11 +62,64 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     _liberaCtrl.text = '';
 
     _loadChecklist();
+
+    //Cargar firmas existentes (si las hay)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSignatures());
+  }
+
+  Future<void> _loadSignatures() async {
+    try {
+      if (widget.bitacora.id == null) return;
+      final int bitacoraId = widget.bitacora.id!;
+
+      final dynamic result =
+          await bitacoraController.obtenerSignature(bitacoraId);
+
+      if (result == null) return;
+
+      int? id;
+      String? firmaEjecuto;
+      String? firmaVerifico;
+      String? firmaLibera;
+
+      if (result is Map<String, dynamic>) {
+        id = result['id'] as int?;
+       
+        firmaEjecuto = result['firma_ejecuto'] as String?;
+
+        firmaVerifico = result['firma_verifico'] as String?;
+        firmaLibera = result['firma_libera'] as String?;
+      } else {
+        // Ajusta estos nombres a los de tu clase Signature
+        id = (result.id is int)
+            ? result.id as int
+            : int.tryParse(result.id.toString());
+        firmaEjecuto = result.firmaEjecuto as String?;
+        firmaVerifico = result.firmaVerifico as String?;
+        firmaLibera = result.firmaLibera as String?;
+      }
+
+      setState(() {
+        _signatureRowId = id;
+        _firmaEjecutoBase64 = firmaEjecuto;
+        _firmaVerificoBase64 = firmaVerifico;
+        _firmaLiberaBase64 = firmaLibera;
+
+        _ejecutaFirmado =
+            (_firmaEjecutoBase64 != null && _firmaEjecutoBase64!.isNotEmpty);
+        _verificaFirmado =
+            (_firmaVerificoBase64 != null && _firmaVerificoBase64!.isNotEmpty);
+        _liberaFirmado =
+            (_firmaLiberaBase64 != null && _firmaLiberaBase64!.isNotEmpty);
+      });
+    } catch (e, st) {
+      debugPrint('Error loading signatures: $e\n$st');
+    }
   }
 
   void _loadChecklist() async {
-  
-    final items = await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
+    final items =
+        await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
     setState(() {
       _checklist = items;
     });
@@ -77,16 +138,33 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     }
   }
 
-  Future<void> _openSignature() async {
-    final signatureData = await Navigator.of(context).push<String?>(
-      MaterialPageRoute(builder: (_) => const SignatureScreen()),
+  Future<void> _openSignatureWithName({
+    required String nombre,
+    required String rol,
+    required void Function(String base64) onSigned,
+  }) async {
+    final String? signatureBase64 = await Navigator.of(context).push<String?>(
+      MaterialPageRoute(
+        builder: (_) => SignatureScreen(
+          nombre: nombre,
+          rol: rol,
+          bitacoraId: widget.bitacora.id!,
+        ),
+      ),
     );
 
-    if (signatureData != null) {
-      // TODO: guardar signatureData en bitácora (ruta o base64)
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Firma guardada (temporal)')));
-    }
+    if (signatureBase64 == null) return;
+
+    setState(() {
+      onSigned(signatureBase64);
+    });
+
+
+
+    if(!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Firma de $nombre guardada')),
+    );
   }
 
   void _onSave() async {
@@ -104,21 +182,19 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     );
 
     // TODO: persistir updated y checklist en repo/DB
-    final List<ChecklistItem> cli = _checklist.map((item){
+    final List<ChecklistItem> cli = _checklist.map((item) {
       return ChecklistItem(
-        bitacoraId: widget.bitacora.id!, 
-        elementoId: item.id, 
-        titulo: item.title,
-        checked: item.checked,
-        observacion: item.observacion,
-        orden: item.orden
-        );
+          bitacoraId: widget.bitacora.id!,
+          elementoId: item.id,
+          titulo: item.title,
+          checked: item.checked,
+          observacion: item.observacion,
+          orden: item.orden);
     }).toList();
-
 
     await catalogController.guardarChecklist(cli);
 
-    if(!mounted) return;
+    if (!mounted) return;
 
     Navigator.of(context).pop({
       'bitacora': updated,
@@ -138,8 +214,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(color: Colors.black54)),
+        Text(label, style: const TextStyle(color: Colors.black54)),
         const SizedBox(width: 4),
         Text(value),
       ],
@@ -167,40 +242,40 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
           child: ListView(
             padding: const EdgeInsets.all(12),
             children: [
-              LayoutBuilder(builder: (context, constraints) => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _readOnlyField('Fecha:', dateStr),
-                            const SizedBox(height: 10),
-                            _readOnlyField('Equipo:', _equipo),
-                          ],
-                        ),
-                    
-                      const SizedBox(width: 10),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _readOnlyField('Área:', _area),
-                            const SizedBox(height: 10),
-                            _readOnlyField('Tipo de limpieza:', _tipoLimpieza),
-                          ],
-                        ),
-                      const SizedBox(width: 10),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _readOnlyField('Línea:', _linea),
-                            const SizedBox(height: 10),
-                            _readOnlyField('Frecuencia:', _frecuencia),
-                          ],
-                        ),
-                     
-                    ],
-                  )),
-               const Divider(),
+              LayoutBuilder(
+                  builder: (context, constraints) => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _readOnlyField('Fecha:', dateStr),
+                              const SizedBox(height: 10),
+                              _readOnlyField('Equipo:', _equipo),
+                            ],
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _readOnlyField('Área:', _area),
+                              const SizedBox(height: 10),
+                              _readOnlyField(
+                                  'Tipo de limpieza:', _tipoLimpieza),
+                            ],
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _readOnlyField('Línea:', _linea),
+                              const SizedBox(height: 10),
+                              _readOnlyField('Frecuencia:', _frecuencia),
+                            ],
+                          ),
+                        ],
+                      )),
+              const Divider(),
               ..._checklist.map((item) {
                 return ChecklistItemWidget(
                   item: item,
@@ -211,29 +286,95 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                 );
               }).toList(),
               const Divider(),
-              TextFormField(
-                controller: _ejecutaCtrl,
-                decoration: const InputDecoration(labelText: 'EJECUTÓ'),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _verificaCtrl,
-                decoration: const InputDecoration(labelText: 'VERIFICÓ'),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _liberaCtrl,
-                decoration: const InputDecoration(labelText: 'LIBERACIÓN'),
-              ),
-              const SizedBox(height: 12),
+
+              // EJECUTÓ
               Row(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _openSignature,
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Firma'),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _ejecutaCtrl,
+                      decoration: const InputDecoration(labelText: 'EJECUTÓ'),
+                    ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    color: _ejecutaFirmado ? Colors.green : Colors.grey,
+                    onPressed: () {
+                      _openSignatureWithName(
+                        nombre: _ejecutaCtrl.text, 
+                        rol: 'EJECUTO',
+                        onSigned: (base64) {
+                          _firmaEjecutoBase64 = base64;
+                          _ejecutaFirmado = _firmaEjecutoBase64 != null &&
+                              _firmaEjecutoBase64!.isNotEmpty;
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+
+              // VERIFICÓ
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _verificaCtrl,
+                      decoration: const InputDecoration(labelText: 'VERIFICÓ'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    color: _verificaFirmado ? Colors.green : Colors.grey,
+                    onPressed: () {
+                      _openSignatureWithName(
+                        nombre: _verificaCtrl.text,
+                        rol: 'VERIFICO',
+                        onSigned: (base64) {
+                          _firmaVerificoBase64 = base64;
+                          _verificaFirmado = _firmaVerificoBase64 != null &&
+                              _firmaVerificoBase64!.isNotEmpty;
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // LIBERACIÓN
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _liberaCtrl,
+                      decoration:
+                          const InputDecoration(labelText: 'LIBERACIÓN'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    color: _liberaFirmado ? Colors.green : Colors.grey,
+                    onPressed: () {
+                      _openSignatureWithName(
+                        nombre: _liberaCtrl.text,
+                        rol: 'LIBERO',
+                        onSigned: (base64) {
+                          _firmaLiberaBase64 = base64;
+                          _liberaFirmado = _firmaLiberaBase64 != null &&
+                              _firmaLiberaBase64!.isNotEmpty;
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
                   OutlinedButton(
                     onPressed: () {
                       Navigator.of(context).pop();

@@ -23,8 +23,8 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-      // deleteDatabase(path);
-      // print('Elimando BD');
+      deleteDatabase(path);
+      print('Elimando BD');
     }
 
     
@@ -75,9 +75,6 @@ class LocalDB {
       )
     ''';
     await db.execute(sqlBitacora);
-    if (kDebugMode) {
-      print('Execute onCreate sqlBitacora:\n$sqlBitacora');
-    }
 
     const sqlEquipo = '''
       CREATE TABLE IF NOT EXISTS equipos (
@@ -86,9 +83,6 @@ class LocalDB {
       )
     ''';
     await db.execute(sqlEquipo);
-    if (kDebugMode) {
-      print('Execute onCreate sqlBitacora:\n$sqlEquipo');
-    }
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS elementos (
@@ -127,9 +121,12 @@ class LocalDB {
       CREATE TABLE IF NOT EXISTS signatures (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         bitacora_id INTEGER NOT NULL,
+        ejecuto TEXT,
         firma_ejecuto TEXT,
+        verifico TEXT,
         firma_verifico TEXT,
-        firma_libero TEXT,
+        libero TEXT,
+        firma_libero TEXT
       )
     ''');
   }
