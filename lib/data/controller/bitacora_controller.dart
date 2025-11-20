@@ -46,4 +46,10 @@ class BitacoraController {
     final repo = BitacoraRepo(db);
     return await repo.getSignatureByBitacoraId(bitacoraId);
   }
+
+  Future<List<ChecklistItem>> obtenerChecklistItem(int bitacoraId)async{
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraRepo(db);
+    return repo.getChecklistItemForId(bitacoraId);
+  }
 }

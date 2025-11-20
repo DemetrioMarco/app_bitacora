@@ -4,8 +4,6 @@ import 'package:app_bitacora/data/controller/cat_controller.dart';
 import 'package:app_bitacora/models/model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../models/bitacora.dart';
-import '../../models/check_item.dart';
 import '../screens/widgets/checklist_item.dart';
 import 'observacion_dialog.dart';
 import 'signature_screen.dart';
@@ -37,7 +35,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   bool _verificaFirmado = false;
   bool _liberaFirmado = false;
 
-  int? _signatureRowId;
   String? _firmaEjecutoBase64;
   String? _firmaVerificoBase64;
   String? _firmaLiberaBase64;
@@ -77,13 +74,11 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
       if (result == null) return;
 
-      int? id;
       String? firmaEjecuto;
       String? firmaVerifico;
       String? firmaLibera;
 
       if (result is Map<String, dynamic>) {
-        id = result['id'] as int?;
        
         firmaEjecuto = result['firma_ejecuto'] as String?;
 
@@ -91,16 +86,12 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
         firmaLibera = result['firma_libera'] as String?;
       } else {
         // Ajusta estos nombres a los de tu clase Signature
-        id = (result.id is int)
-            ? result.id as int
-            : int.tryParse(result.id.toString());
         firmaEjecuto = result.firmaEjecuto as String?;
         firmaVerifico = result.firmaVerifico as String?;
         firmaLibera = result.firmaLibera as String?;
       }
 
       setState(() {
-        _signatureRowId = id;
         _firmaEjecutoBase64 = firmaEjecuto;
         _firmaVerificoBase64 = firmaVerifico;
         _firmaLiberaBase64 = firmaLibera;

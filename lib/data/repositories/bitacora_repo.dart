@@ -1,4 +1,5 @@
 import 'package:app_bitacora/models/bitacora.dart';
+import 'package:app_bitacora/models/checklist_item.dart';
 import 'package:app_bitacora/models/firma.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -13,32 +14,31 @@ class BitacoraRepo {
     map.remove('id');
     final id = await db.insert(_table, map);
     return Bitacora(
-      id: id, 
-      fecha: bitacora.fecha, 
-      area: bitacora.area, 
-      equipo: bitacora.equipo, 
-      equipoId: bitacora.equipoId,
-      tipoLimpieza: bitacora.tipoLimpieza, 
-      frecuencia: bitacora.frecuencia, 
-      linea: bitacora.linea
-    );
+        id: id,
+        fecha: bitacora.fecha,
+        area: bitacora.area,
+        equipo: bitacora.equipo,
+        equipoId: bitacora.equipoId,
+        tipoLimpieza: bitacora.tipoLimpieza,
+        frecuencia: bitacora.frecuencia,
+        linea: bitacora.linea);
   }
 
   Future<int> update(Bitacora bitacora) async {
     final map = Map<String, Object?>.from(bitacora.toMap());
     final id = map['id'] as int?;
-    if( id == null ){
+    if (id == null) {
       throw ArgumentError('Bitacora.id is required for update');
     }
     map.remove('id');
     return await db.update(
-      _table, 
+      _table,
       map,
       where: 'id = ?',
       whereArgs: [id],
     );
   }
-  
+
   Future<List<Bitacora>> getAll({String orderBy = 'fecha ASC'}) async {
     final rows = await db.query(_table, orderBy: orderBy);
     return rows.map((r) => Bitacora.fromMap(r)).toList();
@@ -54,42 +54,48 @@ class BitacoraRepo {
     return Bitacora.fromMap(rows.first);
   }
 
+  Future<List<ChecklistItem>> getChecklistItemForId(int bitacoraId) async {
+    final List<Map<String, dynamic>> rows = await db.query('checklist_items',
+        where: 'bitacora_id = ?', whereArgs: [bitacoraId], orderBy: 'orden');
+
+    return rows.map((e) {
+      return ChecklistItem(
+        bitacoraId: e['bitacora_id'] as int,
+        elementoId: e['elemento_id'] as int,
+        titulo: e['titulo'] as String,
+        checked: (e['checked'] as int) == 1, // 👈 Conversión de 0/1 a bool
+        observacion: e['observacion'] as String? ?? '',
+        orden: e['orden'] as int,
+      );
+    }).toList();
+  }
+
   Future<int> insertSignature(Firma s) async {
     final map = Map<String, Object?>.from(s.toMap());
     map.remove('id');
     return await db.insert('signatures', map);
   }
 
-  Future<Firma?> getSignatureByBitacoraId(int bitacoraId)async{
+  Future<Firma?> getSignatureByBitacoraId(int bitacoraId) async {
     final res = await db.query(
       'signatures',
       where: 'bitacora_id = ?',
       whereArgs: [bitacoraId],
     );
 
-    if(res.isEmpty) return null;
+    if (res.isEmpty) return null;
 
     return Firma.fromMap(res.first);
   }
 
-
-  Future<int> updateSignature(Firma s)async{
+  Future<int> updateSignature(Firma s) async {
     final map = Map<String, Object?>.from(s.toMap());
     final id = s.id;
-    if(id == null) throw ArgumentError('Signature id is null for update');
-    return await db.update(
-      'signatures', 
-      map, 
-      where: 'id = ?',
-      whereArgs: [id] );
+    if (id == null) throw ArgumentError('Signature id is null for update');
+    return await db.update('signatures', map, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> deleteSignature(int id) async {
-    return await db.delete(
-      'signatures',
-      where: 'id = ?',
-      whereArgs: [id]
-    );
+    return await db.delete('signatures', where: 'id = ?', whereArgs: [id]);
   }
-
 }
