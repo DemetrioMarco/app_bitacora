@@ -291,7 +291,15 @@ pw.Widget buildChecklistTable(List<ChecklistItem> items, pw.Font dejavuFont) {
 
 pw.Widget buildThreeSignaturesSection(Firma firma) {
   
- // final pw.ImageProvider? ejecutoImage = (firma.firmaEjecuto != null && firma.firmaEjecuto.isNotEmpty)
+  final pw.ImageProvider? ejecutoImage = (firma.firmaEjecuto != null && firma.firmaEjecuto!.isNotEmpty)
+    ? pw.MemoryImage(base64Decode(firma.firmaEjecuto!))
+    : null;
+  final pw.ImageProvider? verificoImage = (firma.firmaVerifico != null && firma.firmaVerifico!.isNotEmpty)
+    ? pw.MemoryImage(base64Decode(firma.firmaVerifico!))
+    : null;
+  final pw.ImageProvider? liberoImage = (firma.firmaLibero != null && firma.firmaLibero!.isNotEmpty)
+    ? pw.MemoryImage(base64Decode(firma.firmaLibero!))
+    : null; 
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.stretch,
     children: [
@@ -305,7 +313,6 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
-                // Área de firma (aquí irá la imagen base64 luego)
                 pw.Container(
                   height: 60,
                   decoration: pw.BoxDecoration(
@@ -314,15 +321,17 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
                       width: 0.8,
                     ),
                   ),
-                  child: pw.Center(
-                    child: pw.Text(
-                      'Firma 1',
-                      style: const pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
+                  child: ejecutoImage != null
+                    ? pw.Center(child: pw.Image(ejecutoImage, fit: pw.BoxFit.contain))
+                    : pw.Center(
+                        child: pw.Text(
+                          'Firma 1',
+                          style: const pw.TextStyle(
+                            fontSize: 9,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                 ),
                 pw.SizedBox(height: 6),
                 // Línea para el nombre
@@ -359,15 +368,17 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
                       width: 0.8,
                     ),
                   ),
-                  child: pw.Center(
-                    child: pw.Text(
-                      'Firma 2',
-                      style: const pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
+                  child: verificoImage != null
+                    ? pw.Center(child: pw.Image(verificoImage, fit: pw.BoxFit.contain))
+                    : pw.Center(
+                        child: pw.Text(
+                          'Firma 1',
+                          style: const pw.TextStyle(
+                            fontSize: 9,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                 ),
                 pw.SizedBox(height: 6),
                 pw.Container(
@@ -403,15 +414,17 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
                       width: 0.8,
                     ),
                   ),
-                  child: pw.Center(
-                    child: pw.Text(
-                      'Firma 3',
-                      style: const pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
+                  child: liberoImage != null
+                    ? pw.Center(child: pw.Image(liberoImage, fit: pw.BoxFit.contain))
+                    : pw.Center(
+                        child: pw.Text(
+                          'Firma 1',
+                          style: const pw.TextStyle(
+                            fontSize: 9,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                 ),
                 pw.SizedBox(height: 6),
                 pw.Container(
@@ -435,16 +448,4 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
       ),
     ],
   );
-}
-
-Future<pw.ImageProvider?> imageProviderFromBase64(String? base64String) async {
-  if(base64String == null || base64String.isEmpty ) return null;
-
-  try {
-    final bytes = base64Decode(base64String);
-    return pw.MemoryImage(bytes);
-  } catch (e) {
-    print('Error al decodificar base64 de firma: $e');
-    return null;
-  }
 }

@@ -23,8 +23,8 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-      deleteDatabase(path);
-      print('Elimando BD');
+      // deleteDatabase(path);
+      // print('Elimando BD');
     }
 
     
