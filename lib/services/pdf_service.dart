@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -15,7 +14,7 @@ Future<File?> generarPdfBitacora(
     List<ChecklistItem> checklist,
     Firma firma) async {
   if (kIsWeb) {
-    return null; // manejo distinto para web
+    return null;
   }
 
   final fontData = await rootBundle.load('assets/fonts/DejaVuSans.ttf');
@@ -38,9 +37,9 @@ Future<File?> generarPdfBitacora(
                 alignment: pw.Alignment.center,
                 child: pw.Text('Bitácora',
                     style: pw.TextStyle(
-                        fontSize: 14, fontWeight: pw.FontWeight.bold))),
+                        fontSize: 14, fontWeight: pw.FontWeight.bold))
+            ),
 
-            // Fecha pegada al lado izquierdo
             pw.Container(
               alignment: pw.Alignment.centerRight,
               child: pw.Text(
@@ -54,7 +53,7 @@ Future<File?> generarPdfBitacora(
 
             pw.SizedBox(height: 12),
 
-            // Segunda fila con Equipo, Area, Tipo_limpieza y Línea
+            // Cabecera
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [

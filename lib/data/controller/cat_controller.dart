@@ -40,10 +40,4 @@ class CatalogController {
     }
   }
 
-  Future<bool> tieneChecklist(int bitacoraId) async{
-    final db = await LocalDB.instance.db;
-    final repo =  CatalogRepo(db);
-    final count = await repo.countCheckForBitacora(bitacoraId);
-    return count > 0;
-  }
 }

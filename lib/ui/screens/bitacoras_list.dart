@@ -1,17 +1,15 @@
-// lib/ui/screens/bitacoras_list.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 
-import 'package:app_bitacora/data/controller/bitacora_controller.dart';
-import 'package:app_bitacora/data/controller/cat_controller.dart';
-import 'package:app_bitacora/services/pdf_service.dart';
-import 'package:app_bitacora/ui/screens/bitacora_form.dart';
+import 'programar_visita_dialog.dart';
+import '/data/controller/bitacora_controller.dart';
+import '/services/pdf_service.dart';
+import '/ui/screens/bitacora_form.dart';
 import '../../models/model.dart';
 import '../../provider/bitacora_provider.dart';
 import '../screens/widgets/bitacora_item.dart';
-import 'programar_visita_dialog.dart';
 
 class BitacorasListScreen extends StatefulWidget {
   const BitacorasListScreen({super.key});
@@ -68,10 +66,10 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<BitacoraProvider>(context);
     final List<Bitacora> bitacoras = provider.bitacoras;
-    final CatalogController catalogController = CatalogController();
+    final BitacoraController bitacoraController = BitacoraController();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bitácoras')),
+      appBar: AppBar(title: const Text('Programa de visitas')),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: bitacoras.isEmpty
@@ -80,8 +78,8 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                 children: const [
                     SizedBox(height: 120),
                     Center(
-                        child: Text(
-                            'No hay bitácoras. Presiona + para crear una.')),
+                      child: Text('No hay bitácoras. Presiona + para crear una.')
+                    ),
                   ])
             : ListView.separated(
                 padding: const EdgeInsets.all(12),
@@ -90,74 +88,144 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                 itemBuilder: (context, i) {
                   final b = bitacoras[i];
                   return FutureBuilder(
-                      future: catalogController.tieneChecklist(b.id!),
+                      future: bitacoraController.tieneSignature(b.id!),
                       builder: (context, snapshot) {
                         final locked = snapshot.data ?? false;
-                        return BitacoraItem(
-                          bitacora: b,
-                          locked: locked,
-                          onTap: () {
-                            // TODO: abrir detalle/editar
-                          },
-                          onShare: false //locked
-                              ? null
-                              : () async {
-                                  final result =
-                                      await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            BitacoraFormScreen(bitacora: b)),
+
+                        return Dismissible(
+                            key: ValueKey(b.id),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child:
+                                  const Icon(Icons.delete, color: Colors.white),
+                            ),
+                            confirmDismiss: (direction) async {
+                              final bool? confirm = await showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                        title: const Text('Confirmar'),
+                                        content: const Text(
+                                            '¿Desea eliminar esta bitácora'),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: const Text('Cancelar')),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: const Text('Eliminar')),
+                                        ],
+                                      ));
+                              return confirm ?? false;
+                            },
+                            onDismissed: (direction) async {
+                              final scaffold = ScaffoldMessenger.of(context);
+                              try {
+                                // 1) Intentar borrar en BD
+                                final success = await bitacoraController
+                                    .eliminarBitacora(b.id!);
+
+                                if (success) {
+                                  
+                                  await provider.cargarBitacoras();
+
+                                  scaffold.showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: Colors.green,
+                                      content: Text('Se eliminó la bitácora ${b.id}'),
+                                    ),
                                   );
-                                  if (result != null && result is Map) {
-                                    // Si el formulario devolvió cambios, recargamos la lista desde la BD
-                                    await provider.cargarBitacoras();
-                                    // Si quieres puedes buscar el índice y actualizar sólo ese elemento en memoria
-                                    // pero recargar es simple y garantiza sincronía con la BD
-                                  }
-                                },
-                          onEdit: () async {
-                            final scaffold = ScaffoldMessenger.of(context);
-
-                            List<ChecklistItem> checklist =
-                                await bitacoraController
-                                    .obtenerChecklistItem(b.id!);
-                            Firma? firma = await bitacoraController
-                                .obtenerSignature(b.id!);
-
-                            if (firma == null) {
-                              scaffold.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'No se encontró firma asociada a esta bitácora'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            try {
-                              final File? file = await generarPdfBitacora(
-                                  b, checklist, firma);
-                              if (file == null) {
-                                scaffold.showSnackBar(const SnackBar(
-                                    content: Text(
-                                        'En web la descarga del PDF se maneja distinto')));
-                                return;
+                                } else {
+                                  // No se borró nada en BD
+                                  scaffold.showSnackBar(
+                                    SnackBar(
+                                      content: Text('No se pudo eliminar la bitácora ${b.id}')),
+                                  );
+                                  // Mantener consistencia recargando
+                                  await provider.cargarBitacoras();
+                                }
+                              } catch (e, st) {
+                                scaffold.showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Error al eliminar la bitácora: $e\n$st')),
+                                );
+                                await provider.cargarBitacoras();
                               }
-                              scaffold.showSnackBar(
-                                const SnackBar(
-                                    content: Text('PDF generado, abriendo...')),
-                              );
-                              print(file.path);
-                              await OpenFilex.open(file.path);
-                            } catch (e) {
-                              scaffold.showSnackBar(
-                                SnackBar(
-                                  content: Text('Error al generar el PDF: $e'),
-                                ),
-                              );
-                            }
-                          },
-                        );
+                            },
+                            child: BitacoraItem(
+                              bitacora: b,
+                              locked: locked,
+                              onTap: () {
+                                // TODO: abrir detalle/editar
+                              },
+                              onShare: locked
+                                  ? null
+                                  : () async {
+                                      final result =
+                                          await Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (_) => BitacoraFormScreen(
+                                                bitacora: b)),
+                                      );
+                                      if (result != null && result is Map) {
+                                        
+                                        await provider.cargarBitacoras();
+                                        
+                                      }
+                                    },
+                              onEdit: () async {
+                                final scaffold = ScaffoldMessenger.of(context);
+
+                                List<ChecklistItem> checklist =
+                                    await bitacoraController
+                                        .obtenerChecklistItem(b.id!);
+                                Firma? firma = await bitacoraController
+                                    .obtenerSignature(b.id!);
+
+                                if (firma == null) {
+                                  scaffold.showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'No se encontró firma asociada a esta bitácora'),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                try {
+                                  final File? file = await generarPdfBitacora(
+                                      b, checklist, firma);
+                                  if (file == null) {
+                                    scaffold.showSnackBar(const SnackBar(
+                                        content: Text(
+                                            'En web la descarga del PDF se maneja distinto')));
+                                    return;
+                                  }
+                                  scaffold.showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('PDF generado, abriendo...')),
+                                  );
+                                  print(file.path);
+                                  await OpenFilex.open(file.path);
+                                } catch (e) {
+                                  scaffold.showSnackBar(
+                                    SnackBar(
+                                      content:
+                                          Text('Error al generar el PDF: $e'),
+                                    ),
+                                  );
+                                }
+                              },
+                            ));
                       });
                 },
               ),

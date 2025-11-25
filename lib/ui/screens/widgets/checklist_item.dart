@@ -6,14 +6,14 @@ typedef OnCheckedChanged = void Function(bool checked);
 
 class ChecklistItemWidget extends StatelessWidget {
   final CheckItem item;
-  final OnCheckedChanged onChanged;
-  final VoidCallback onEditObservacion;
+  final OnCheckedChanged? onChanged;
+  final VoidCallback? onEditObservacion;
 
   const ChecklistItemWidget({
     super.key,
     required this.item,
-    required this.onChanged,
-    required this.onEditObservacion,
+    this.onChanged,
+    this.onEditObservacion,
   });
 
   @override
@@ -22,14 +22,16 @@ class ChecklistItemWidget extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       leading: Checkbox(
         value: item.checked,
-        onChanged: (v) => onChanged(v ?? false),
+        onChanged: onChanged == null
+          ? null
+          : (v) => onChanged!(v ?? false),
       ),
       title: Text(item.title),
       subtitle: item.observacion != null && item.observacion!.isNotEmpty
           ? Text(item.observacion!, style: const TextStyle(color: Colors.black54))
           : null,
       trailing: IconButton(
-        icon: const Icon(Icons.edit, size: 20, color: Colors.blueAccent,),
+        icon: Icon(Icons.edit, size: 20, color: onChanged == null ? Colors.grey : Colors.blueAccent,),
         onPressed: onEditObservacion,
       ),
     );

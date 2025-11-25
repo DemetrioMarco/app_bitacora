@@ -60,10 +60,11 @@ class BitacoraRepo {
 
     return rows.map((e) {
       return ChecklistItem(
+        id: e['id'] as int,
         bitacoraId: e['bitacora_id'] as int,
         elementoId: e['elemento_id'] as int,
         titulo: e['titulo'] as String,
-        checked: (e['checked'] as int) == 1, // 👈 Conversión de 0/1 a bool
+        checked: (e['checked'] as int) == 1,
         observacion: e['observacion'] as String? ?? '',
         orden: e['orden'] as int,
       );
@@ -95,7 +96,39 @@ class BitacoraRepo {
     return await db.update('signatures', map, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<int> deleteSignature(int id) async {
-    return await db.delete('signatures', where: 'id = ?', whereArgs: [id]);
+
+  Future<int> validateSignature(int bitacoraId) async {
+    final result = await db.rawQuery(
+      '''
+        SELECT COUNT(*) AS total FROM signatures WHERE bitacora_id = ? AND firma_libero <> '';
+      ''',
+      [bitacoraId],
+    );
+    return result.first['total'] as int;
+  }
+
+  // Eliminar Bitacora
+  Future<int> deleteBitacora( int bitacoraId) async {
+    return await db.delete(
+      'bitacoras',
+      where: 'id = ?',
+      whereArgs: [bitacoraId]
+      );
+  }
+  
+  Future<int> deleteSignature(int bitacoraId) async {
+    return await db.delete(
+      'signatures', 
+      where: 'bitacora_id = ?', 
+      whereArgs: [bitacoraId]
+    );
+  }
+
+  Future<int> deleteChecklisItem(int bitacoraId) async {
+     return await db.delete(
+      'checklist_items',
+      where: 'bitacora_id = ?',
+      whereArgs: [bitacoraId]
+      );
   }
 }

@@ -1,4 +1,3 @@
-import '../../models/bitacora.dart';
 import '../../models/model.dart';
 import '../repositories/bitacora_repo.dart';
 import '../local_db.dart';
@@ -52,4 +51,28 @@ class BitacoraController {
     final repo = BitacoraRepo(db);
     return repo.getChecklistItemForId(bitacoraId);
   }
+
+  Future<bool> tieneSignature(int bitacoraId) async {
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraRepo(db);
+    final count = await repo.validateSignature(bitacoraId);
+    return count > 0;
+  }
+
+  Future<bool> eliminarBitacora(int bitacoraId) async {
+    try {
+      final db = await LocalDB.instance.db;
+      final repo = BitacoraRepo(db);
+      int deleteBitacora = await repo.deleteBitacora(bitacoraId);
+      int deleteSignature = await repo.deleteSignature(bitacoraId);
+      int deleteCheckList = await repo.deleteChecklisItem(bitacoraId);
+      final total = deleteBitacora + deleteSignature + deleteCheckList;
+
+      return total > 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  
 }

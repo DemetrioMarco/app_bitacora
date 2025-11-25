@@ -1,4 +1,3 @@
-// lib/ui/widgets/bitacora_item.dart
 import 'package:flutter/material.dart';
 import '/../models/bitacora.dart';
 import 'package:intl/intl.dart';
@@ -31,7 +30,7 @@ class BitacoraItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(icon: Icon(Icons.check_circle, color: locked ? Colors.blue : Colors.grey), onPressed: onShare),
-            IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
+            IconButton(icon: Icon(Icons.picture_as_pdf, color:locked ? Colors.green : Colors.grey), onPressed: onEdit),
           ],
         ),
       ),

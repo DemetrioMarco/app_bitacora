@@ -85,7 +85,6 @@ class CatalogRepo {
     await db.insert('equipo_elemento', map);
   }
 
-
   Future<List<CheckItem>> getCheckItem(int equipoId) async {
   final List<Map<String, dynamic>> rows = await db.rawQuery(
     '''
@@ -115,12 +114,5 @@ class CatalogRepo {
     await db.insert('checklist_items', map);
   }
 
-  Future<int> countCheckForBitacora(int bitacoraId) async{
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM checklist_items WHERE bitacora_id = ?',
-      [bitacoraId]);
-    return Sqflite.firstIntValue(result) ?? 0;
-    
-  }
 
 }

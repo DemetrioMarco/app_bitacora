@@ -1,9 +1,8 @@
-// lib/ui/screens/bitacora_form.dart
-import 'package:app_bitacora/data/controller/bitacora_controller.dart';
-import 'package:app_bitacora/data/controller/cat_controller.dart';
-import 'package:app_bitacora/models/model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '/data/controller/bitacora_controller.dart';
+import '/data/controller/cat_controller.dart';
+import '/models/model.dart';
 import '../screens/widgets/checklist_item.dart';
 import 'observacion_dialog.dart';
 import 'signature_screen.dart';
@@ -27,7 +26,9 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   late String _frecuencia;
   late String _linea;
 
-  TextEditingController _ejecutaCtrl = TextEditingController();
+  bool _isReadOnly = false;
+
+  final TextEditingController _ejecutaCtrl = TextEditingController();
   final TextEditingController _verificaCtrl = TextEditingController();
   final TextEditingController _liberaCtrl = TextEditingController();
 
@@ -54,7 +55,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     _frecuencia = widget.bitacora.frecuencia;
     _linea = widget.bitacora.linea;
 
-    _ejecutaCtrl.text = '';
+    // _ejecutaCtrl.text = '';
     _verificaCtrl.text = '';
     _liberaCtrl.text = '';
 
@@ -74,25 +75,32 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
       if (result == null) return;
 
+      String? ejecuto;
       String? firmaEjecuto;
+      String? verifico;
       String? firmaVerifico;
       String? firmaLibera;
 
       if (result is Map<String, dynamic>) {
        
         firmaEjecuto = result['firma_ejecuto'] as String?;
-
         firmaVerifico = result['firma_verifico'] as String?;
-        firmaLibera = result['firma_libera'] as String?;
+        firmaLibera = result['firma_libero'] as String?;
+        ejecuto = result['ejecuto'] as String?;
+        verifico = result['verifico'] as String?;
       } else {
         // Ajusta estos nombres a los de tu clase Signature
+        ejecuto = result.ejecuto as String?;
         firmaEjecuto = result.firmaEjecuto as String?;
+        verifico = result.verifico as String?;
         firmaVerifico = result.firmaVerifico as String?;
-        firmaLibera = result.firmaLibera as String?;
+        firmaLibera = result.firmaLibero as String?;
       }
 
       setState(() {
+        _ejecutaCtrl.text = ejecuto ?? '';
         _firmaEjecutoBase64 = firmaEjecuto;
+        _verificaCtrl.text = verifico ?? '';
         _firmaVerificoBase64 = firmaVerifico;
         _firmaLiberaBase64 = firmaLibera;
 
@@ -109,11 +117,35 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   }
 
   void _loadChecklist() async {
+    
+    final List<ChecklistItem> result = await bitacoraController.obtenerChecklistItem(widget.bitacora.id!);
+
+    if(result.isNotEmpty ){
+ 
+      final items = result.map((item)=> CheckItem(
+        id: item.id!, 
+        title: item.titulo, 
+        observacion: item.observacion,
+        checked: item.checked,
+        orden: item.orden!
+        )).toList();
+
+      setState(() {
+          _checklist = items;
+          _isReadOnly = true;
+        });
+
+
+    }else{
     final items =
         await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
-    setState(() {
-      _checklist = items;
-    });
+
+        setState(() {
+          _checklist = items;
+          _isReadOnly = false;
+        });
+    }
+
   }
 
   Future<void> _openObservacion(CheckItem item) async {
@@ -270,10 +302,14 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               ..._checklist.map((item) {
                 return ChecklistItemWidget(
                   item: item,
-                  onChanged: (checked) {
+                  onChanged: _isReadOnly
+                  ? null
+                  : (checked) {
                     setState(() => item.checked = checked);
                   },
-                  onEditObservacion: () => _openObservacion(item),
+                  onEditObservacion: _isReadOnly
+                  ? null
+                  : () => _openObservacion(item),
                 );
               }).toList(),
               const Divider(),

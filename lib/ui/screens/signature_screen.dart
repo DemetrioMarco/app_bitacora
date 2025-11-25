@@ -1,11 +1,8 @@
-// lib/signature_screen.dart
 import 'dart:convert';
-import 'package:app_bitacora/data/controller/bitacora_controller.dart';
-import 'package:app_bitacora/models/model.dart';
 import 'package:flutter/material.dart';
 import 'package:signature/signature.dart';
-
-
+import '/data/controller/bitacora_controller.dart';
+import '../../models/model.dart';
 
 class SignatureScreen extends StatefulWidget {
   final String nombre;
