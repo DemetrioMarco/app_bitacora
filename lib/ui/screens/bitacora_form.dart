@@ -204,7 +204,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       linea: _linea,
     );
 
-    // TODO: persistir updated y checklist en repo/DB
     final List<ChecklistItem> cli = _checklist.map((item) {
       return ChecklistItem(
           bitacoraId: widget.bitacora.id!,

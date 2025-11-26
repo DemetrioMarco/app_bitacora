@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 
@@ -164,7 +165,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                               bitacora: b,
                               locked: locked,
                               onTap: () {
-                                // TODO: abrir detalle/editar
+                                // abrir detalle/editar
                               },
                               onShare: locked
                                   ? null
@@ -214,7 +215,9 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                         content:
                                             Text('PDF generado, abriendo...')),
                                   );
-                                  print(file.path);
+                                  if (kDebugMode) {
+                                    print(file.path);
+                                  }
                                   await OpenFilex.open(file.path);
                                 } catch (e) {
                                   scaffold.showSnackBar(
