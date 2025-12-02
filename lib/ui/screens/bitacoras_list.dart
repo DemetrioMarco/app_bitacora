@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app_bitacora/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
@@ -68,6 +69,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     final provider = Provider.of<BitacoraProvider>(context);
     final List<Bitacora> bitacoras = provider.bitacoras;
     final BitacoraController bitacoraController = BitacoraController();
+    final user = Provider.of<UserProvider>(context, listen: false).user;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Programa de visitas')),
@@ -233,8 +235,12 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                 },
               ),
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: _openProgramarModal, child: const Icon(Icons.add)),
+      floatingActionButton: user?.role == 'admin'
+      ? FloatingActionButton(
+          onPressed: _openProgramarModal, 
+          child: const Icon(Icons.add)
+        )
+      : null,
     );
   }
 }

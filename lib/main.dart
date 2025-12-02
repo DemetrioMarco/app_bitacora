@@ -1,11 +1,11 @@
-// lib/main.dart
-
+import 'package:app_bitacora/provider/user_provider.dart';
 import 'package:app_bitacora/services/seed_service.dart';
+import 'package:app_bitacora/ui/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/local_db.dart';
 import 'provider/bitacora_provider.dart';
-import 'ui/screens/bitacoras_list.dart'; // ruta según tu proyecto
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +15,8 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => BitacoraProvider())
+        ChangeNotifierProvider<BitacoraProvider>(create: (_) => BitacoraProvider()),
+        ChangeNotifierProvider<UserProvider>(create:  (_) => UserProvider())
       ],
       child: const MyApp(),)
     );
@@ -29,27 +30,10 @@ class MyApp extends StatelessWidget {
       title: 'Mi App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.teal),
-      home: const HomeScreen(), // usa tu HomeScreen existente o la que pongo más abajo
+      home: const LoginScreen(),
       routes: {
-        '/bitacoras': (_) => const BitacorasListScreen(),
+        '/login': (_) => const LoginScreen(),
       },
-    );
-  }
-}
-
-/// Si ya tienes HomeScreen, ignora este widget. Es un ejemplo que integra la pantalla.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(child: Text('Pantalla principal')),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Abrir Bitácoras',
-        onPressed: () => Navigator.of(context).pushNamed('/bitacoras'),
-        child: const Icon(Icons.list),
-      ),
     );
   }
 }
