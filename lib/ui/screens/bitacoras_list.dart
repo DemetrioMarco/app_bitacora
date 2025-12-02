@@ -7,10 +7,10 @@ import 'package:provider/provider.dart';
 import 'programar_visita_dialog.dart';
 import '/data/controller/bitacora_controller.dart';
 import '/services/pdf_service.dart';
-import '/ui/screens/bitacora_form.dart';
+import '../screens/bitacora_form.dart';
+import '../screens/widgets/bitacora_item.dart';
 import '../../models/model.dart';
 import '../../provider/bitacora_provider.dart';
-import '../screens/widgets/bitacora_item.dart';
 
 class BitacorasListScreen extends StatefulWidget {
   const BitacorasListScreen({super.key});
