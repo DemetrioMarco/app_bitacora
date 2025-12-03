@@ -1,5 +1,7 @@
+import 'package:app_bitacora/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '/data/controller/bitacora_controller.dart';
 import '/data/controller/cat_controller.dart';
 import '/models/model.dart';
@@ -246,6 +248,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('dd/MM/yy').format(_fecha);
+    final user = Provider.of<UserProvider>(context, listen: false).user;
 
     return Scaffold(
       appBar: AppBar(
@@ -314,34 +317,36 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               const Divider(),
 
               // EJECUTÓ
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _ejecutaCtrl,
-                      decoration: const InputDecoration(labelText: 'EJECUTÓ'),
+              
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _ejecutaCtrl,
+                        decoration: const InputDecoration(labelText: 'EJECUTÓ'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    color: _ejecutaFirmado ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      _openSignatureWithName(
-                        nombre: _ejecutaCtrl.text, 
-                        rol: 'EJECUTO',
-                        onSigned: (base64) {
-                          _firmaEjecutoBase64 = base64;
-                          _ejecutaFirmado = _firmaEjecutoBase64 != null &&
-                              _firmaEjecutoBase64!.isNotEmpty;
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      color: _ejecutaFirmado ? Colors.green : Colors.grey,
+                      onPressed: () {
+                        _openSignatureWithName(
+                          nombre: _ejecutaCtrl.text, 
+                          rol: 'EJECUTO',
+                          onSigned: (base64) {
+                            _firmaEjecutoBase64 = base64;
+                            _ejecutaFirmado = _firmaEjecutoBase64 != null &&
+                                _firmaEjecutoBase64!.isNotEmpty;
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
 
               // VERIFICÓ
+              if(user?.role == 'admin')
               Row(
                 children: [
                   Expanded(
@@ -371,6 +376,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               const SizedBox(height: 8),
 
               // LIBERACIÓN
+              if(user?.role == 'admin')
               Row(
                 children: [
                   Expanded(
