@@ -51,7 +51,7 @@ Future<File?> generarPdfBitacora(
               ),
             ),
 
-            pw.SizedBox(height: 12),
+            pw.SizedBox(height: 10),
 
             // Cabecera
             pw.Row(
@@ -59,7 +59,6 @@ Future<File?> generarPdfBitacora(
               children: [
                 // Equipo
                 pw.Expanded(
-                  flex: 3,
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
@@ -77,7 +76,6 @@ Future<File?> generarPdfBitacora(
 
                 // Area
                 pw.Expanded(
-                  flex: 2,
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
@@ -91,11 +89,23 @@ Future<File?> generarPdfBitacora(
                   ),
                 ),
 
-                pw.SizedBox(width: 12),
+                // Línea
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('Sub-área / Línea:',
+                          style: pw.TextStyle(
+                              fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(bitacora.linea,
+                          style: const pw.TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
 
                 // Tipo_limpieza
                 pw.Expanded(
-                  flex: 2,
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
@@ -109,23 +119,22 @@ Future<File?> generarPdfBitacora(
                   ),
                 ),
 
-                pw.SizedBox(width: 12),
-
-                // Línea
+                // Tipo_limpieza
                 pw.Expanded(
-                  flex: 1,
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Línea:',
+                      pw.Text('Frecuencua:',
                           style: pw.TextStyle(
                               fontSize: 10, fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(height: 4),
-                      pw.Text(bitacora.linea,
+                      pw.Text(bitacora.frecuencia,
                           style: const pw.TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
+
+                
               ],
             ),
             pw.SizedBox(height: 16),

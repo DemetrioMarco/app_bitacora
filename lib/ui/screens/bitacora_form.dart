@@ -193,6 +193,9 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   }
 
   void _onSave() async {
+
+    if (_isReadOnly) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     final updated = Bitacora(
@@ -256,7 +259,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _onSave,
+            onPressed: _isReadOnly ? null : _onSave,
             tooltip: 'Guardar',
           ),
         ],
@@ -271,32 +274,38 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                   builder: (context, constraints) => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _readOnlyField('Fecha:', dateStr),
-                              const SizedBox(height: 10),
-                              _readOnlyField('Equipo:', _equipo),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _readOnlyField('Fecha:', dateStr),
+                                const SizedBox(height: 10),
+                                _readOnlyField('Equipo:', _equipo),
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _readOnlyField('Área:', _area),
-                              const SizedBox(height: 10),
-                              _readOnlyField(
-                                  'Tipo de limpieza:', _tipoLimpieza),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _readOnlyField('Área:', _area),
+                                const SizedBox(height: 10),
+                                _readOnlyField(
+                                    'Tipo de limpieza:', _tipoLimpieza),
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _readOnlyField('Línea:', _linea),
-                              const SizedBox(height: 10),
-                              _readOnlyField('Frecuencia:', _frecuencia),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _readOnlyField('Sub-área / Línea:', _linea),
+                                const SizedBox(height: 10),
+                                _readOnlyField('Frecuencia:', _frecuencia),
+                              ],
+                            ),
                           ),
                         ],
                       )),
@@ -415,7 +424,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                   ),
                   const Spacer(),
                   ElevatedButton(
-                    onPressed: _onSave,
+                    onPressed: _isReadOnly ? null : _onSave,
                     child: const Text('Guardar'),
                   ),
                 ],

@@ -27,8 +27,8 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
 
   // Catálogos en duro (reemplazar por repo después)
   final List<String> _areas = ['Líquidos', 'Planta', 'Almacén'];
-  final List<String> _tipos = ['Rutina', 'Correctiva', 'Inspección'];
-  final List<String> _frecuencias = ['Diaria', 'Semanal', 'Quincenal', 'Mensual'];
+  final List<String> _tipos = ['Rutina', 'Correctiva', 'Inspección','Profunda'];
+  final List<String> _frecuencias = ['Por turno','Diaria', '2 veces a la semana', 'Semanal', 'Quincenal', 'Mensual','Trimestral', 'Semestral', 'Anual'];
   final List<String> _linea = ['1','2','3','4'];
   List<Equipo> _equipos = [];
 
@@ -142,6 +142,28 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
                 decoration: const InputDecoration(labelText: 'Seleccione equipo'),
                 validator: (v) => v == null ? 'Seleccione equipo' : null,
               ),
+
+              DropdownButtonFormField<String>(
+                initialValue: _selectedArea,
+                items: _areas
+                  .map((e) => DropdownMenuItem<String>(
+                    value: e, 
+                    child: Text(e))
+                  ).toList(),
+                onChanged: (v) => setState(() => _selectedArea = v),
+                decoration: const InputDecoration(labelText: 'Seleccione área'),
+                validator: (v) => v == null ? 'Seleccione área' : null,
+              ),
+
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedLinea,
+                items: _linea.map( (e) => DropdownMenuItem(value: e, child: Text(e))).toList(), 
+                onChanged: (v) => setState(() => _selectedLinea = v),
+                decoration: const InputDecoration(labelText: 'Sub-Area / Línea'),
+                validator: (v) => v == null || v.isEmpty ? 'Seleccione Sub-área / línea' : null,
+              ),
+
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedTipo,
@@ -150,6 +172,7 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
                 decoration: const InputDecoration(labelText: 'Tipo de limpieza'),
                 validator: (v) => v == null || v.isEmpty ? 'Seleccione tipo de limpieza' : null,
               ),
+
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedFrecuencia,
@@ -157,14 +180,6 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
                 onChanged: (v) => setState(() => _selectedFrecuencia = v),
                 decoration: const InputDecoration(labelText: 'Frecuencia'),
                 validator: (v) => v == null || v.isEmpty ? 'Seleccione frecuencia' : null,
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedLinea,
-                items: _linea.map( (e) => DropdownMenuItem(value: e, child: Text(e))).toList(), 
-                onChanged: (v) => setState(() => _selectedLinea = v),
-                decoration: const InputDecoration(labelText: 'Línea'),
-                validator: (v) => v == null || v.isEmpty ? 'Seleccione línea' : null,
               ),
               const SizedBox(height: 16),
               Row(children: [
