@@ -1,11 +1,11 @@
 class TipoLimpieza {
-    int id;
+    int? id;
     String nombre;
     bool activo;
     DateTime fechaCreacion;
 
     TipoLimpieza({
-        required this.id,
+        this.id,
         required this.nombre,
         required this.activo,
         required this.fechaCreacion,

@@ -8,7 +8,7 @@ class LocalDB {
   LocalDB._internal();
 
   static Database? _db;
-  static const _dbName = 'safer.db';
+  static const _dbName = 'saferfs.db';
   static const _dbVersion = 1;
 
   Future<Database> get db async {
@@ -22,7 +22,7 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-     // deleteDatabase(path);
+     deleteDatabase(path);
      // print('Elimando BD');
     }
 
@@ -32,6 +32,8 @@ class LocalDB {
   }
 
   Future<void> _onCreate(Database db, int version) async {
+
+    
     const sql1 = '''
       CREATE TABLE catalogos_version (
         table_name TEXT PRIMARY KEY,
@@ -52,6 +54,17 @@ class LocalDB {
     ''';
     await db.execute(sql2);
 
+    const sqlSubArea = '''
+      CREATE TABLE sub_area (
+        id TEXT PRIMARY KEY,
+        nombre TEXT,
+        activo INTEGER,
+        fecha_creacion TEXT,
+        fecha_actualizacion TEXT
+      )
+    ''';
+    await db.execute(sqlSubArea);
+
     await db.execute('''
     CREATE TABLE IF NOT EXISTS tipos_limpieza (
       id INTEGER PRIMARY KEY,
@@ -59,6 +72,13 @@ class LocalDB {
       activo INTEGER,
       fecha_creacion TEXT
     )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS frecuencia(
+        id INTEGER PRIMARY KEY,
+        nombre TEXT
+      )
     ''');
 
     const sqlBitacora = '''
@@ -99,6 +119,23 @@ class LocalDB {
         UNIQUE(equipo_id, elemento_id),
         FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE,
         FOREIGN KEY (elemento_id) REFERENCES elementos(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS equipo_relacion (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        equipo_id INTEGER NOT NULL,
+        area_id INTEGER NOT NULL,
+        sub_area_id INTEGER NOT NULL,
+        frecuencia_id INTEGER NOT NULL,
+        tipo_limpieza_id INTEGER NOT NULL,
+        UNIQUE(equipo_id, area_id, sub_area_id, frecuencia_id, tipo_limpieza_id),
+        FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE,
+        FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE CASCADE,
+        FOREIGN KEY (sub_area_id) REFERENCES sub_area(id) ON DELETE CASCADE,
+        FOREIGN KEY (frecuencia_id) REFERENCES frecuencia(id) ON DELETE CASCADE,
+        FOREIGN KEY (tipo_limpieza_id) REFERENCES tipos_limpieza(id) ON DELETE CASCADE
       )
     ''');
 

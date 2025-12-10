@@ -1,7 +1,10 @@
-// lib/data/repositories/cat_repo.dart (fragmento)
+import 'package:app_bitacora/models/bitacora.dart';
 import 'package:app_bitacora/models/check_item.dart';
 import 'package:app_bitacora/models/checklist_item.dart';
 import 'package:app_bitacora/models/equipo_elemento.dart';
+import 'package:app_bitacora/models/equipo_relacion.dart';
+import 'package:app_bitacora/models/frecuencia.dart';
+import 'package:app_bitacora/models/sub_area.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../models/area.dart';
 import '../../models/elemento.dart';
@@ -109,10 +112,100 @@ class CatalogRepo {
  
 }
 
+Future<Bitacora?> getEquipoRelacion(int equipoId, DateTime fecha) async {
+  final List<Map<String, dynamic>> rows = await db.rawQuery(
+    '''
+      SELECT 
+	      e.nombre AS 'Equipo',
+	      a.nombre AS 'Area',
+	      sa.nombre AS 'Sub-area',
+	      f.nombre AS 'Frecuencia',
+	      tl.nombre AS 'Tipo Limpieza'
+      FROM equipo_relacion er
+	      JOIN equipos e ON er.equipo_id = e.id
+	      JOIN areas a ON er.area_id = a.id
+	      JOIN sub_area sa ON er.sub_area_id = sa.id 
+	      JOIN frecuencia f ON er.frecuencia_id = f.id
+	      JOIN tipos_limpieza tl ON er.tipo_limpieza_id = tl.id
+      WHERE er.equipo_id = ?
+      LIMIT 1;
+    ''',
+    [equipoId]
+  );
+
+  if(rows.isEmpty) return null;
+
+  final row = rows.first;
+
+  return Bitacora(
+    fecha: fecha, 
+    equipoId: equipoId, 
+    equipo: row['Equipo'] as String? ?? '', 
+    area: row['Area'] as String? ?? '',  
+    linea: row['Sub-area'] as String? ?? '', 
+    tipoLimpieza: row['Tipo Limpieza'] as String? ?? '', 
+    frecuencia: row['Frecuencia'] as String? ?? '', 
+  );
+}
+
   Future<void> insertCheckList(ChecklistItem items) async {
     final map = Map<String, Object?>.from(items.toMap());
     await db.insert('checklist_items', map);
   }
 
+  Future<void> insertArea(Area area) async {
+    final map = Map<String, Object?>.from(area.toJson());
+    await db.insert('areas', map);
+  }
+
+  Future<Area> getArea(int id) async {
+    final rows = await db.query(
+      'areas',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1
+      );
+    return Area.fromJson(rows.first);
+  }
+
+  Future<void> insertSubArea(SubArea subarea) async {
+    final map = Map<String, Object?>.from(subarea.toJson());
+    await db.insert('sub_area', map);
+  }
+
+  Future<SubArea> getSubArea(int id) async {
+    final rows = await db.query(
+      'sub_area',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1
+      );
+    return SubArea.fromJson(rows.first);
+  }
+
+  Future<void> insertTipoLimpieza(TipoLimpieza tipo) async {
+    final map = Map<String, Object?>.from(tipo.toJson());
+    await db.insert('tipos_limpieza', map);
+  }
+
+  Future<TipoLimpieza> getTipoLimpieza(int id) async {
+    final rows = await db.query(
+      'tipos_limpieza',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1
+      );
+    return TipoLimpieza.fromJson(rows.first);
+  }
+
+  Future<void> insertFrecuencia(Frecuencia frecuencia) async {
+    final map = Map<String, Object?>.from(frecuencia.toJson());
+    await db.insert('frecuencia', map);
+  }
+  
+  Future<void> insertEquipoRelacion( EquipoRelacion e) async {
+    final map = Map<String, dynamic>.from(e.toMap());
+    await db.insert('equipo_relacion', map);
+  }
 
 }

@@ -40,4 +40,10 @@ class CatalogController {
     }
   }
 
+  Future<Bitacora?> crearBitacora(int equipoId, DateTime fecha) async {
+    final db = await LocalDB.instance.db;
+    final repo = CatalogRepo(db);
+    return await repo.getEquipoRelacion(equipoId, fecha);
+  }
+
 }
