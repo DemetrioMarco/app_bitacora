@@ -135,6 +135,7 @@ pdf.addPage(
   final bytes = await pdf.save();
   final dir = await getApplicationDocumentsDirectory();
   final file = File('${dir.path}/bitacora_${bitacora.id}.pdf');
+  print(file);
   await file.writeAsBytes(bytes);
   return file;
 }

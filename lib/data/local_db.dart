@@ -22,7 +22,7 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-     deleteDatabase(path);
+     // deleteDatabase(path);
      // print('Elimando BD');
     }
 
@@ -84,13 +84,14 @@ class LocalDB {
     const sqlBitacora = '''
       CREATE TABLE IF NOT EXISTS bitacoras (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        equipo_id INTEGER NOT NULL,
+        equipo TEXT NOT NULL,
         fecha TEXT NOT NULL,
         area TEXT NOT NULL,
-        equipo TEXT NOT NULL,
-        equipo_id INTEGER NOT NULL,
+        linea TEXT NOT NULL,
         tipo_limpieza TEXT NOT NULL,
         frecuencia TEXT NOT NULL,
-        linea TEXT NOT NULL
+        item_monday TEXT NOT NULL
       )
     ''';
     await db.execute(sqlBitacora);

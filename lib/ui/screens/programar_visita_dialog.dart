@@ -89,7 +89,7 @@ class _ProgramarVisitaFormState extends State<ProgramarVisitaForm> {
     // );
 
     try {
-      final newBitacora = await catController.crearBitacora(_selectedEquipo!.id ?? 1, _selectedDate);
+      final newBitacora = await catController.crearBitacora(_selectedEquipo!.id ?? 1, _selectedDate, '1');
       final saved = await controller.guardar(newBitacora!);
       if(!mounted) return;
       Navigator.of(context).pop(saved);

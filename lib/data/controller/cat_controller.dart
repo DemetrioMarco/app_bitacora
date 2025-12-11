@@ -40,10 +40,10 @@ class CatalogController {
     }
   }
 
-  Future<Bitacora?> crearBitacora(int equipoId, DateTime fecha) async {
+  Future<Bitacora?> crearBitacora(int equipoId, DateTime fecha, String itemId) async {
     final db = await LocalDB.instance.db;
     final repo = CatalogRepo(db);
-    return await repo.getEquipoRelacion(equipoId, fecha);
+    return await repo.getEquipoRelacion(equipoId, fecha, itemId);
   }
 
 }

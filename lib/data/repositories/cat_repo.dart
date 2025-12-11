@@ -112,7 +112,7 @@ class CatalogRepo {
  
 }
 
-Future<Bitacora?> getEquipoRelacion(int equipoId, DateTime fecha) async {
+Future<Bitacora?> getEquipoRelacion(int equipoId, DateTime fecha, String itemId) async {
   final List<Map<String, dynamic>> rows = await db.rawQuery(
     '''
       SELECT 
@@ -145,6 +145,7 @@ Future<Bitacora?> getEquipoRelacion(int equipoId, DateTime fecha) async {
     linea: row['Sub-area'] as String? ?? '', 
     tipoLimpieza: row['Tipo Limpieza'] as String? ?? '', 
     frecuencia: row['Frecuencia'] as String? ?? '', 
+    itemMonday: itemId
   );
 }
 
