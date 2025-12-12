@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 
-import 'programar_visita_dialog.dart';
+import '../../models/app_user.dart';
 import '/data/controller/bitacora_controller.dart';
 import '/services/pdf_service.dart';
 import '../screens/login_screen.dart';
@@ -48,35 +48,14 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     await provider.cargarBitacoras();
   }
 
-  Future<void> _openProgramarModal() async {
-    final newBitacora = await showModalBottomSheet<Bitacora>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-      builder: (_) => const ProgramarVisitaForm(),
-    );
-
-    if (!mounted) return;
-
-    if (newBitacora != null) {
-      final provider = Provider.of<BitacoraProvider>(context, listen: false);
-      await provider.cargarBitacoras();
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Visita programada (guardada localmente)')));
-    }
-  }
-
   // Cargar actividades desde Monday
   Future<void> _cargarItems() async {
     setState(() => isLoading = true );
+      final AppUser? user = Provider.of<UserProvider>(context, listen: false).user;
     try {
       final items = await MondayService.instance.fetchItemsByTurnoAndOperador(
         turno: '1er Turno', 
-        operador: 'Operador 1'
+        operador: user!.username,
       );
 
       if(items.isNotEmpty){
@@ -378,9 +357,8 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
             ))
         ],
       ),
-      floatingActionButton: user?.role == 'admin'
+      floatingActionButton: (user?.role == 'Operador' || user?.role == 'Admin')
           ? FloatingActionButton(
-              // onPressed: _openProgramarModal, child: const Icon(Icons.add))
               onPressed: isLoading ? null : _cargarItems, 
               child: isLoading ? const CircularProgressIndicator(color: Colors.white,) :  const Icon(Icons.add))
           : null,

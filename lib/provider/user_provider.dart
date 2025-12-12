@@ -6,8 +6,8 @@ class UserProvider extends ChangeNotifier {
   AppUser? _user;
   AppUser? get user => _user;
 
-  void loginUser(String username, String role){
-    _user = AppUser(username: username, role: role);
+  void loginUser(String username, String role, String pass){
+    _user = AppUser(username: username, role: role, pass: pass);
     notifyListeners();
   }
 

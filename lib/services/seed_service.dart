@@ -1,5 +1,7 @@
 import 'package:app_bitacora/data/local_db.dart';
 import 'package:app_bitacora/data/repositories/cat_repo.dart';
+import 'package:app_bitacora/data/repositories/user_repo.dart';
+import 'package:app_bitacora/models/app_user.dart';
 import 'package:app_bitacora/models/area.dart';
 import 'package:app_bitacora/models/equipo.dart';
 import 'package:app_bitacora/models/equipo_elemento.dart';
@@ -15,6 +17,7 @@ class SeedService {
   static Future<void> seedIfNeeded() async {
     final db = await LocalDB.instance.db;
     final CatalogRepo repo = CatalogRepo(db);
+    final UserRepo userRepo = UserRepo(db);
 
     // comprobar si ya hay equipos
     final countEquipos = Sqflite.firstIntValue(
@@ -827,6 +830,24 @@ class SeedService {
 
       for(final er in equipoRelaciones){
         await repo.insertEquipoRelacion(er);
+      }
+    }
+
+    // Usuarios
+    final countUser = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM user')
+    ) ?? 0;
+
+    if( countUser == 0){
+      final users = [
+        AppUser(username: 'Operador 1', role: 'Operador', pass: '1234'),
+        AppUser(username: 'Operador 2', role: 'Operador', pass: '5678'),
+        AppUser(username: 'Operador 3', role: 'Operador', pass: '9874'),
+        AppUser(username: 'Admin', role: 'Admin', pass: '2509')
+      ];
+
+      for(final u in users){
+        await userRepo.insertUser(u);
       }
     }
   }

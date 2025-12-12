@@ -108,7 +108,7 @@ class MondayService {
           items_page(
             query_params: {
               rules: [
-                { column_id: "color_mkyggdbs", compare_value: $turnoJson, operator: contains_terms },
+            #    { column_id: "color_mkyggdbs", compare_value: $turnoJson, operator: contains_terms },
                 { column_id: "color_mkyg7x46", compare_value: $operadorJson, operator: contains_terms },
                 { column_id: "status", compare_value: $statusJson, operator: contains_terms }
               ]

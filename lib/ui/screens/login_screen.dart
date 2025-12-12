@@ -1,3 +1,5 @@
+import 'package:app_bitacora/data/controller/user_controller.dart';
+import 'package:app_bitacora/models/app_user.dart';
 import 'package:app_bitacora/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,25 +14,30 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
+  final UserController controller = UserController();
   final _formKey = GlobalKey<FormState>();
   String _username = '';
   String _password = '';
   bool _obscurePassword = true;
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      String? role;
-      if (_username == 'admin' && _password == '1234') {
-        role = 'admin';
-      } else if( _username == 'usuario' && _password == '5678'){
-        role = 'user';
-      }
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      AppUser? user = await controller.obtenerUsuario(_username, _password);
+      
+      if(!mounted) return;
 
-      if(role != null){
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        userProvider.loginUser(_username, role);
+      // if (_username == 'admin' && _password == '1234') {
+      //   role = 'admin';
+      // } else if( _username == 'usuario' && _password == '5678'){
+      //   role = 'user';
+      // }
+
+      if(user != null){
+                
+        userProvider.loginUser(_username, user.role, _password);
         
         Navigator.pushReplacement(
         context,
@@ -162,9 +169,9 @@ class LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                '© 2025 saferfs',
+                '© Saferfs - Maxival - V.1.2',
                 style: TextStyle(color: Colors.grey[600]),
-              ),
+              )
             ],
           ),
         ),

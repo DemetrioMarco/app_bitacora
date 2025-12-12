@@ -22,7 +22,7 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-     // deleteDatabase(path);
+      deleteDatabase(path);
      // print('Elimando BD');
     }
 
@@ -164,6 +164,15 @@ class LocalDB {
         firma_verifico TEXT,
         libero TEXT,
         firma_libero TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS user(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        role TEXT,
+        pass TEXT
       )
     ''');
   }
