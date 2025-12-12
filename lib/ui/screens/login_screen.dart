@@ -29,12 +29,6 @@ class LoginScreenState extends State<LoginScreen> {
       
       if(!mounted) return;
 
-      // if (_username == 'admin' && _password == '1234') {
-      //   role = 'admin';
-      // } else if( _username == 'usuario' && _password == '5678'){
-      //   role = 'user';
-      // }
-
       if(user != null){
                 
         userProvider.loginUser(_username, user.role, _password);

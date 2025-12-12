@@ -9,6 +9,7 @@ class BitacoraItem extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onShare;
   final VoidCallback? onEdit;
+  final VoidCallback? onSend;
   final bool locked;
 
   const BitacoraItem({
@@ -17,12 +18,13 @@ class BitacoraItem extends StatelessWidget {
     this.onTap,
     this.onShare,
     this.onEdit,
+    this.onSend,
     this.locked = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    //final user = Provider.of<UserProvider>(context, listen: false).user;
 
     return Card(
       child: ListTile(
@@ -34,8 +36,9 @@ class BitacoraItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(icon: Icon(Icons.check_circle, color: locked ? Colors.blue : Colors.grey), onPressed: onShare),
-            if(user?.role == 'admin')
+          //  if(user?.role == 'admin')
               IconButton(icon: Icon(Icons.picture_as_pdf, color:locked ? Colors.green : Colors.grey), onPressed: onEdit),
+            IconButton(onPressed: onSend, icon: Icon(Icons.send, color: locked ? Colors.blue : Colors.grey,))
           ],
         ),
       ),
