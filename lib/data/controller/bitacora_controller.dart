@@ -74,5 +74,11 @@ class BitacoraController {
     }
   }
 
+  Future<int> actualizarBitacora(Bitacora bitacora) async {
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraRepo(db);
+    return await repo.update(bitacora);
+  }
+
   
 }

@@ -108,7 +108,7 @@ class MondayService {
           items_page(
             query_params: {
               rules: [
-            #    { column_id: "color_mkyggdbs", compare_value: $turnoJson, operator: contains_terms },
+            #    { column_id: "color_mkyggdbs", compare_value: $turnoJson, operator: contains_terms },   este es el filtro por turno que no he habilitado 
                 { column_id: "color_mkyg7x46", compare_value: $operadorJson, operator: contains_terms },
                 { column_id: "status", compare_value: $statusJson, operator: contains_terms }
               ]
@@ -203,16 +203,21 @@ class MondayService {
   Future<void> cerrarTareaYAdjuntarPdf({
     required dynamic itemId,
     required String updateBody,
-    required File pdfFile,
+   // required File pdfFile,
+    required String pdfFile,
+    required String nameFile,
   }) async {
     try {
       final updateId = await MondayService.instance
           .crearUpdate(itemId: itemId, body: updateBody);
-      print('Update creado: $updateId');
+    
 
       final fileId = await MondayService.instance
           .uploadFileToUpdate(updateId: updateId, file: pdfFile);
-      print('Archivo subido, id: $fileId');
+      
+      if(fileId.isNotEmpty){
+        await MondayService.instance.changeItemStatus(itemId: itemId, status: "Listo");
+      }
     } catch (e) {
       print('Error en proceso: $e');
       rethrow;
@@ -265,54 +270,39 @@ class MondayService {
     final data = payload['data'] as Map<String, dynamic>?;
     final created = data?['create_update'] as Map<String, dynamic>?;
     final updateId = created?['id']?.toString();
-    if (updateId == null)
+    if (updateId == null) {
       throw Exception('Unexpected response: no update id returned');
+    }
 
     return updateId;
   }
 
-  /// Sube un archivo (p. ej. PDF) al update indicado. Devuelve el id del archivo o del attachment según la respuesta.
-  /// - updateId: id del update donde se agregará el archivo (String o int)
+
   /// - file: instancia File (dart:io) del PDF a subir
   Future<String> uploadFileToUpdate({
     required dynamic updateId,
-    required File file,
-    String fileFieldName = '0', // clave en el map multipart
+    required String file
+   // required File file,
   }) async {
     final updateIdStr = updateId.toString();
 
-    // Construimos la operación GraphQL con una variable para el archivo
-    // Observa: algunos endpoints usan "File" o "Upload" como tipo; usamos "File!" (compat con monday).
-    final operations = jsonEncode({
-      'query':
-          'mutation (\$file: File!) { add_file_to_update(update_id: $updateIdStr, file: \$file) { id } }',
-      'variables': {'file': null},
-    });
-
-    // map: qué parte del multipart corresponde al archivo
-    final mapPart = jsonEncode({
-      fileFieldName: ['variables.file']
-    });
-
     final uri = Uri.parse('$_endpoint/file');
     final request = http.MultipartRequest('POST', uri);
+
     // Headers
     request.headers['Authorization'] = Env.mondayToken;
-    // NOTA: MultipartRequest pone su propio Content-Type
 
-    // Campos 'operations' y 'map' según GraphQL multipart spec
-    request.fields['operations'] = operations;
-    request.fields['map'] = mapPart;
+    request.fields['query'] = 'mutation (\$file: File!) { add_file_to_update(update_id: $updateIdStr, file: \$file) { id } }';
 
-    // Añadimos el archivo. Usamos basename del path para nombre del archivo en la subida.
-    final fileStream = http.ByteStream(file.openRead());
-    final fileLength = await file.length();
-    final filename = file.path.split(Platform.pathSeparator).last;
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'variables[file]', 
+        file
+      ),
+    );
+    
 
-    final multipartFile = http.MultipartFile(
-        fileFieldName, fileStream, fileLength,
-        filename: filename);
-    request.files.add(multipartFile);
+
 
     // Enviar request
     final streamedResponse = await request.send().timeout(_timeout);

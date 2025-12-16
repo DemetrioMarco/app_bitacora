@@ -1,11 +1,11 @@
-import 'package:app_bitacora/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../screens/widgets/checklist_item.dart';
+import '/provider/user_provider.dart';
 import '/data/controller/bitacora_controller.dart';
 import '/data/controller/cat_controller.dart';
 import '/models/model.dart';
-import '../screens/widgets/checklist_item.dart';
 import 'observacion_dialog.dart';
 import 'signature_screen.dart';
 
@@ -355,7 +355,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                 ),
 
               // VERIFICÓ
-              if(user?.role == 'admin')
+           //   if(user?.role == 'admin')
               Row(
                 children: [
                   Expanded(
@@ -385,7 +385,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               const SizedBox(height: 8),
 
               // LIBERACIÓN
-              if(user?.role == 'admin')
+          //    if(user?.role == 'admin')
               Row(
                 children: [
                   Expanded(

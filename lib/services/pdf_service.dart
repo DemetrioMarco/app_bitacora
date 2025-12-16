@@ -24,7 +24,6 @@ Future<File?> generarPdfBitacora(
   // Formato de fecha dd/mm/yyyy
   final fechaFormatted = DateFormat('dd/MM/yyyy').format(bitacora.fecha);
 
- // Reemplaza la creación de la página por MultiPage con header repetido
 pdf.addPage(
   pw.MultiPage(
     pageFormat: PdfPageFormat.a4,
@@ -266,6 +265,10 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
+                pw.Text("Ejecuto",style: const pw.TextStyle(
+                              fontSize: 9,
+                              color: PdfColors.grey600,
+                            ),),
                 pw.Container(
                   height: 60,
                   decoration: pw.BoxDecoration(
@@ -296,7 +299,7 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
                 ),
                 pw.SizedBox(height: 4),
                 pw.Text(
-                  firma.ejecuto ?? 'Nombre 1',
+                  firma.ejecuto ?? 'Ejecuto',
                   style: const pw.TextStyle(
                     fontSize: 9,
                     color: PdfColors.grey600,
@@ -314,6 +317,10 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
+                pw.Text("Verifico",style: const pw.TextStyle(
+                              fontSize: 9,
+                              color: PdfColors.grey600,
+                            ),),
                 pw.Container(
                   height: 60,
                   decoration: pw.BoxDecoration(
@@ -362,6 +369,10 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
+                pw.Text("Libero",style: const pw.TextStyle(
+                              fontSize: 9,
+                              color: PdfColors.grey600,
+                            ),),
                 pw.Container(
                   height: 60,
                   decoration: pw.BoxDecoration(

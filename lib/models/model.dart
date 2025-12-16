@@ -1,3 +1,4 @@
+export 'app_user.dart';
 export 'area.dart';
 export 'bitacora.dart';
 export 'catalogo_version.dart';
@@ -5,6 +6,9 @@ export 'check_item.dart';
 export 'checklist_item.dart';
 export 'elemento.dart';
 export 'equipo_elemento.dart';
+export 'equipo_relacion.dart';
 export 'equipo.dart';
 export 'firma.dart';
+export 'frecuencia.dart';
+export 'sub_area.dart';
 export 'tipo_limpieza.dart';

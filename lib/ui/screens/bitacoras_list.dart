@@ -1,22 +1,16 @@
 import 'dart:io';
 
-import 'package:app_bitacora/data/controller/cat_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/app_user.dart';
-import '/data/controller/bitacora_controller.dart';
-import '/services/pdf_service.dart';
-import '../screens/login_screen.dart';
-import '../screens/bitacora_form.dart';
-import '../screens/widgets/bitacora_item.dart';
-import '../../services/monday.service.dart';
-import '../../models/model.dart';
-import '../../provider/user_provider.dart';
-import '../../provider/bitacora_provider.dart';
-
+import '/data/controller/controller.dart';
+import '/services/services.dart';
+import '/provider/provider.dart';
+import '/models/model.dart';
+import 'screens.dart';
+import 'widgets/bitacora_item.dart';
 class BitacorasListScreen extends StatefulWidget {
   const BitacorasListScreen({super.key});
 
@@ -28,7 +22,6 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
   final BitacoraController bitacoraController = BitacoraController();
   final CatalogController catController = CatalogController();
 
-   final Map<int, File> _generatedPdfs = {};
 
   bool isLoading = false;
 
@@ -84,8 +77,6 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     }
   }
 
-  // Crear update en Monday
-  Future<void> _updateItem() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +87,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Programa de visitas ${user?.role}'),
+        title: Text('Programa de visitas ${user?.username}'),
         actions: [
           IconButton(
               onPressed: () {
@@ -117,8 +108,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                     children: const [
                         SizedBox(height: 120),
                         Center(
-                            child: Text(
-                                'No hay bitácoras. Presiona + para crear una.')),
+                            child: Text('No hay bitácoras. \nPresiona + \npara cargar una.')),
                       ])
                 : ListView.separated(
                     padding: const EdgeInsets.all(12),
@@ -129,7 +119,8 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                       return FutureBuilder(
                           future: bitacoraController.tieneSignature(b.id!),
                           builder: (context, snapshot) {
-                            final locked = snapshot.data ?? false;
+                            final bool locked = snapshot.data ?? false;
+                            final bool canSend = (b.pdf?.isNotEmpty ?? false);
 
                             if (user?.role == 'Admin') {
                               return Dismissible(
@@ -148,8 +139,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                         context: context,
                                         builder: (context) => AlertDialog(
                                               title: const Text('Confirmar'),
-                                              content: const Text(
-                                                  '¿Desea eliminar esta bitácora'),
+                                              content: const Text('¿Desea eliminar esta bitácora'),
                                               actions: [
                                                 TextButton(
                                                     onPressed: () =>
@@ -255,11 +245,13 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                               content: Text(
                                                   'En web la descarga del PDF se maneja distinto')));
                                           return;
+                                        }else{
+                                          b.pdf = file.path;
+                                          await bitacoraController.actualizarBitacora(b);
                                         }
                                         scaffold.showSnackBar(
                                           const SnackBar(
-                                              content: Text(
-                                                  'PDF generado, abriendo...')),
+                                              content: Text('PDF generado, abriendo...')),
                                         );
                                         if (kDebugMode) {
                                           print(file.path);
@@ -279,6 +271,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                               return BitacoraItem(
                                 bitacora: b,
                                 locked: locked,
+                                canSend: canSend,
                                 onTap: () async {},
                                 onShare: locked
                                     ? null
@@ -307,8 +300,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                   if (firma == null) {
                                     scaffold.showSnackBar(
                                       const SnackBar(
-                                        content: Text(
-                                            'No se encontró firma asociada a esta bitácora'),
+                                        content: Text('No se encontró firma asociada a esta bitácora'),
                                       ),
                                     );
                                     return;
@@ -322,6 +314,10 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                           content: Text(
                                               'En web la descarga del PDF se maneja distinto')));
                                       return;
+                                    }else{
+                                      b.pdf = file.path;
+                                      await bitacoraController.actualizarBitacora(b);
+                                      await provider.cargarBitacoras();
                                     }
                                     scaffold.showSnackBar(
                                       const SnackBar(
@@ -329,15 +325,6 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                               'PDF generado, abriendo...')),
                                     );
 
-                                    if(mounted){
-                                      setState(() {
-                                        _generatedPdfs[b.id!] = file;
-                                      });
-                                    }
-                                    if (kDebugMode) {
-                                      print(file.path);
-                                      print(_generatedPdfs);
-                                    }
                                     await OpenFilex.open(file.path);
                                   } catch (e) {
                                     scaffold.showSnackBar(
@@ -348,28 +335,54 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                     );
                                   }
                                 },
-                                onSend: () async {
-                                  final scaffold =
-                                      ScaffoldMessenger.of(context);
+                                onSend: !canSend
+                                  ? null
+                                  : () async {
+
+                                  final scaffold = ScaffoldMessenger.of(context);
+                                  
+                                  setState(() {
+                                    isLoading = true;
+                                  });
+
                                   try {
-                                    // Si crearUpdate devuelve algo, captúralo; si no, solo esperalo
-                                    final result = await MondayService.instance
-                                        .crearUpdate(
-                                      itemId: b.itemMonday,
-                                      body: 'Actualización desde la app',
+
+                                    final String? fileToUpload = b.pdf;
+                                    if (fileToUpload == null || fileToUpload.isEmpty) {
+                                        throw Exception('No existe PDF generado para id=${b.id}');
+                                    }
+
+                                    await MondayService.instance.cerrarTareaYAdjuntarPdf(
+                                      itemId: b.itemMonday, 
+                                      updateBody: "Envio evidencia desde app", 
+                                      pdfFile: fileToUpload, 
+                                      nameFile: "bitacora_${b.id}"
                                     );
 
                                     scaffold.showSnackBar(
                                       const SnackBar(
-                                          content:Text('Update enviado a Monday')),
+                                          content: Text('Update enviado a Monday'),
+                                          backgroundColor: Colors.green
+                                      )
                                     );
 
-                                    // Si quieres refrescar lista o estado:
                                     await provider.cargarBitacoras();
-                                  } catch (e) {
-                                    scaffold.showSnackBar(SnackBar(
-                                        content: Text(
-                                            'Error al enviar update: $e')));
+                                     
+                                  } catch (e, st) {
+                                    if (kDebugMode) {
+                                      print('Error al enviar update: $e\n$st');
+                                    }
+                                    scaffold.showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error al enviar update: $e'),
+                                        backgroundColor: Colors.redAccent,
+                                      )
+                                    );
+                                  } finally {
+                                    
+                                    setState(() {
+                                      isLoading = false;
+                                    });
                                   }
                                 },
                               );
@@ -407,3 +420,4 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     );
   }
 }
+

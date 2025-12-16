@@ -1,8 +1,7 @@
-import 'package:app_bitacora/provider/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '/../models/bitacora.dart';
 import 'package:intl/intl.dart';
+
+import '/../models/bitacora.dart';
 
 class BitacoraItem extends StatelessWidget {
   final Bitacora bitacora;
@@ -11,6 +10,7 @@ class BitacoraItem extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onSend;
   final bool locked;
+  final bool canSend;
 
   const BitacoraItem({
     super.key,
@@ -20,12 +20,11 @@ class BitacoraItem extends StatelessWidget {
     this.onEdit,
     this.onSend,
     this.locked = false,
+    this.canSend = false
   });
 
   @override
   Widget build(BuildContext context) {
-    //final user = Provider.of<UserProvider>(context, listen: false).user;
-
     return Card(
       child: ListTile(
         onTap: onTap,
@@ -35,10 +34,9 @@ class BitacoraItem extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(icon: Icon(Icons.check_circle, color: locked ? Colors.blue : Colors.grey), onPressed: onShare),
-          //  if(user?.role == 'admin')
-              IconButton(icon: Icon(Icons.picture_as_pdf, color:locked ? Colors.green : Colors.grey), onPressed: onEdit),
-            IconButton(onPressed: onSend, icon: Icon(Icons.send, color: locked ? Colors.blue : Colors.grey,))
+            IconButton(icon: const Icon(Icons.check_circle, color: Colors.blue), onPressed: onShare),
+            IconButton(icon: Icon(Icons.picture_as_pdf, color: locked ? Colors.green : Colors.grey), onPressed: onEdit),
+            IconButton(icon: Icon(Icons.send, color: canSend ? Colors.blue : Colors.grey),onPressed: onSend)
           ],
         ),
       ),

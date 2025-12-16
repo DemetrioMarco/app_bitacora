@@ -91,7 +91,8 @@ class LocalDB {
         linea TEXT NOT NULL,
         tipo_limpieza TEXT NOT NULL,
         frecuencia TEXT NOT NULL,
-        item_monday TEXT NOT NULL
+        item_monday TEXT NOT NULL,
+        pdf TEXT
       )
     ''';
     await db.execute(sqlBitacora);
