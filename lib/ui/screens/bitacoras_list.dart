@@ -71,7 +71,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
 
       await _loadBitacoras();
     } catch (e) {
-      print('Error: $e');
+      if(kDebugMode)  print('Error: $e');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -352,21 +352,37 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                         throw Exception('No existe PDF generado para id=${b.id}');
                                     }
 
-                                    await MondayService.instance.cerrarTareaYAdjuntarPdf(
+                                    final String? enviado = await MondayService.instance.cerrarTareaYAdjuntarPdf(
                                       itemId: b.itemMonday, 
                                       updateBody: "Envio evidencia desde app", 
                                       pdfFile: fileToUpload, 
                                       nameFile: "bitacora_${b.id}"
                                     );
 
-                                    scaffold.showSnackBar(
-                                      const SnackBar(
-                                          content: Text('Update enviado a Monday'),
-                                          backgroundColor: Colors.green
-                                      )
-                                    );
+                                    if(enviado!.isNotEmpty){
+                                      final success = await bitacoraController
+                                          .eliminarBitacora(b.id!);
 
-                                    await provider.cargarBitacoras();
+                                      if(success){
+                                        scaffold.showSnackBar(
+                                          const SnackBar(
+                                              content: Text('Reporte enviado a Monday'),
+                                              backgroundColor: Colors.green
+                                          )
+                                        );
+                                        
+                                        await provider.cargarBitacoras();
+                                      }
+                                    } else {
+                                      scaffold.showSnackBar(
+                                          const SnackBar(
+                                              content: Text('Error al enviar a Monday'),
+                                              backgroundColor: Colors.redAccent
+                                          )
+                                      );
+                                    }
+
+
                                      
                                   } catch (e, st) {
                                     if (kDebugMode) {

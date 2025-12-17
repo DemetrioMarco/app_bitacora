@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -134,7 +134,8 @@ pdf.addPage(
   final bytes = await pdf.save();
   final dir = await getApplicationDocumentsDirectory();
   final file = File('${dir.path}/bitacora_${bitacora.id}.pdf');
-  print(file);
+
+  if(kDebugMode) print(file);
   await file.writeAsBytes(bytes);
   return file;
 }

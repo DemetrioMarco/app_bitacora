@@ -1,13 +1,14 @@
+import 'package:app_bitacora/provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../screens/widgets/checklist_item.dart';
-import '/provider/user_provider.dart';
-import '/data/controller/bitacora_controller.dart';
-import '/data/controller/cat_controller.dart';
+
+import '/data/controller/controller.dart';
 import '/models/model.dart';
-import 'observacion_dialog.dart';
-import 'signature_screen.dart';
+import 'widgets/observacion_dialog.dart';
+import 'screens.dart';
 
 class BitacoraFormScreen extends StatefulWidget {
   final Bitacora bitacora;
@@ -180,10 +181,18 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
     if (signatureBase64 == null) return;
 
+    if (!mounted) return;
+
     setState(() {
       onSigned(signatureBase64);
     });
 
+    try {
+      final bitProvider = Provider.of<BitacoraProvider>(context, listen: false);
+      await bitProvider.cargarBitacoras();
+    } catch (e, st) {
+      if(kDebugMode) debugPrint('Error actualizando provider tras firma: $e\n$st');
+    }
 
 
     if(!mounted) return;
@@ -251,7 +260,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('dd/MM/yy').format(_fecha);
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    
 
     return Scaffold(
       appBar: AppBar(

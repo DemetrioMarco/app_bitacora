@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_bitacora/constants/env.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class MondayService {
@@ -200,7 +201,7 @@ class MondayService {
     return changedId;
   }
 
-  Future<void> cerrarTareaYAdjuntarPdf({
+  Future<String?> cerrarTareaYAdjuntarPdf({
     required dynamic itemId,
     required String updateBody,
    // required File pdfFile,
@@ -217,11 +218,13 @@ class MondayService {
       
       if(fileId.isNotEmpty){
         await MondayService.instance.changeItemStatus(itemId: itemId, status: "Listo");
+        return fileId;
       }
     } catch (e) {
-      print('Error en proceso: $e');
+      if(kDebugMode) print('Error en proceso: $e');
       rethrow;
     }
+    return null;
   }
 
   /// Crea un update en un item y devuelve el id del update (como String).

@@ -8,7 +8,7 @@ class LocalDB {
   LocalDB._internal();
 
   static Database? _db;
-  static const _dbName = 'saferfs.db';
+  static const _dbName = 'saferfood.db';
   static const _dbVersion = 1;
 
   Future<Database> get db async {
@@ -22,8 +22,8 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-      deleteDatabase(path);
-     // print('Elimando BD');
+    // deleteDatabase(path);
+    // print('Elimando BD');
     }
 
     
