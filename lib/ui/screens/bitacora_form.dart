@@ -1,6 +1,7 @@
 import 'package:app_bitacora/provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../screens/widgets/checklist_item.dart';
@@ -30,18 +31,18 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   late String _linea;
 
   bool _isReadOnly = false;
+  bool _photoTaken = false;
+  final ImagePicker _picker = ImagePicker();
+  String? _photoPath;
 
   final TextEditingController _ejecutaCtrl = TextEditingController();
   final TextEditingController _verificaCtrl = TextEditingController();
-  final TextEditingController _liberaCtrl = TextEditingController();
 
   bool _ejecutaFirmado = false;
   bool _verificaFirmado = false;
-  bool _liberaFirmado = false;
 
   String? _firmaEjecutoBase64;
   String? _firmaVerificoBase64;
-  String? _firmaLiberaBase64;
 
   List<CheckItem> _checklist = [];
   final CatalogController catalogController = CatalogController();
@@ -60,12 +61,43 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
     // _ejecutaCtrl.text = '';
     _verificaCtrl.text = '';
-    _liberaCtrl.text = '';
 
     _loadChecklist();
 
     //Cargar firmas existentes (si las hay)
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadSignatures());
+  }
+
+
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+        preferredCameraDevice: CameraDevice.rear
+      );
+
+      if(picked == null){
+        // Usuario canceló la cámara
+        return;
+      }
+
+      setState(() {
+        _photoTaken = true;
+        _photoPath = picked.path;
+
+        debugPrint(_photoPath);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto tomado correctametne'))
+      );
+    } catch (e, st) {
+      debugPrint('Error al abrir cámara / tomar foto: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al tomar la foto'))
+      );
+    }
   }
 
   Future<void> _loadSignatures() async {
@@ -82,13 +114,13 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       String? firmaEjecuto;
       String? verifico;
       String? firmaVerifico;
-      String? firmaLibera;
+    //  String? firmaLibera;
 
       if (result is Map<String, dynamic>) {
        
         firmaEjecuto = result['firma_ejecuto'] as String?;
         firmaVerifico = result['firma_verifico'] as String?;
-        firmaLibera = result['firma_libero'] as String?;
+    //    firmaLibera = result['firma_libero'] as String?;
         ejecuto = result['ejecuto'] as String?;
         verifico = result['verifico'] as String?;
       } else {
@@ -97,7 +129,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
         firmaEjecuto = result.firmaEjecuto as String?;
         verifico = result.verifico as String?;
         firmaVerifico = result.firmaVerifico as String?;
-        firmaLibera = result.firmaLibero as String?;
+    //    firmaLibera = result.firmaLibero as String?;
       }
 
       setState(() {
@@ -105,14 +137,14 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
         _firmaEjecutoBase64 = firmaEjecuto;
         _verificaCtrl.text = verifico ?? '';
         _firmaVerificoBase64 = firmaVerifico;
-        _firmaLiberaBase64 = firmaLibera;
+        // _firmaLiberaBase64 = firmaLibera;
 
         _ejecutaFirmado =
             (_firmaEjecutoBase64 != null && _firmaEjecutoBase64!.isNotEmpty);
         _verificaFirmado =
             (_firmaVerificoBase64 != null && _firmaVerificoBase64!.isNotEmpty);
-        _liberaFirmado =
-            (_firmaLiberaBase64 != null && _firmaLiberaBase64!.isNotEmpty);
+        // _liberaFirmado =
+        //     (_firmaLiberaBase64 != null && _firmaLiberaBase64!.isNotEmpty);
       });
     } catch (e, st) {
       debugPrint('Error loading signatures: $e\n$st');
@@ -216,6 +248,8 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       tipoLimpieza: _tipoLimpieza,
       frecuencia: _frecuencia,
       linea: _linea,
+      itemMonday: widget.bitacora.itemMonday,
+      foto: _photoPath
     );
 
     final List<ChecklistItem> cli = _checklist.map((item) {
@@ -229,6 +263,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     }).toList();
 
     await catalogController.guardarChecklist(cli);
+    await bitacoraController.actualizarBitacora(updated);
 
     if (!mounted) return;
 
@@ -242,7 +277,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   void dispose() {
     _ejecutaCtrl.dispose();
     _verificaCtrl.dispose();
-    _liberaCtrl.dispose();
     super.dispose();
   }
 
@@ -335,7 +369,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               const Divider(),
 
               // EJECUTÓ
-              
                 Row(
                   children: [
                     Expanded(
@@ -364,7 +397,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                 ),
 
               // VERIFICÓ
-           //   if(user?.role == 'admin')
               Row(
                 children: [
                   Expanded(
@@ -393,44 +425,28 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               ),
               const SizedBox(height: 8),
 
-              // LIBERACIÓN
-          //    if(user?.role == 'admin')
               Row(
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _liberaCtrl,
-                      decoration:
-                          const InputDecoration(labelText: 'LIBERACIÓN'),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(), 
+                    child: const Text('Cancelar')
+                  ),
+                 const Spacer(),
+                 SizedBox(
+                  width: 56,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      
+                    ),
+                    onPressed: _takePhoto,
+                    child: Icon(Icons.camera_alt,
+                      color: _photoTaken ? Colors.greenAccent : Colors.blue
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    color: _liberaFirmado ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      _openSignatureWithName(
-                        nombre: _liberaCtrl.text,
-                        rol: 'LIBERO',
-                        onSigned: (base64) {
-                          _firmaLiberaBase64 = base64;
-                          _liberaFirmado = _firmaLiberaBase64 != null &&
-                              _firmaLiberaBase64!.isNotEmpty;
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Cancelar'),
-                  ),
+                  ),            
                   const Spacer(),
                   ElevatedButton(
                     onPressed: _isReadOnly ? null : _onSave,

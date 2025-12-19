@@ -9,6 +9,7 @@ class Bitacora {
   final String linea;
   final String? itemMonday;
   String? pdf;
+  String? foto;
 
   Bitacora({
     this.id,
@@ -20,7 +21,8 @@ class Bitacora {
     required this.frecuencia,
     required this.linea,
     this.itemMonday,
-    this.pdf
+    this.pdf,
+    this.foto
   });
 
   Map<String, dynamic> toMap() {
@@ -34,7 +36,8 @@ class Bitacora {
       'frecuencia': frecuencia,
       'linea':linea,
       'item_monday': itemMonday,
-      'pdf': pdf
+      'pdf': pdf,
+      'foto': foto
     };
   }
 
@@ -49,7 +52,8 @@ class Bitacora {
       frecuencia: m['frecuencia'] as String,
       linea: m['linea'] as String,
       itemMonday: m['item_monday'] as String,
-      pdf: m['pdf'] as String?
+      pdf: m['pdf'] as String?,
+      foto: m['foto'] as String?
     );
   }
 }

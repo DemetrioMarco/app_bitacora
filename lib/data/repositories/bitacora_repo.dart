@@ -100,7 +100,7 @@ class BitacoraRepo {
   Future<int> validateSignature(int bitacoraId) async {
     final result = await db.rawQuery(
       '''
-        SELECT COUNT(*) AS total FROM signatures WHERE bitacora_id = ? AND firma_libero <> '';
+        SELECT COUNT(*) AS total FROM signatures WHERE bitacora_id = ? AND firma_verifico <> '';
       ''',
       [bitacoraId],
     );

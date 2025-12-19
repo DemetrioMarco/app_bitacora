@@ -229,17 +229,14 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                       if (firma == null) {
                                         scaffold.showSnackBar(
                                           const SnackBar(
-                                            content: Text(
-                                                'No se encontró firma asociada a esta bitácora'),
+                                            content: Text('No se encontró firma asociada a esta bitácora'),
                                           ),
                                         );
                                         return;
                                       }
 
                                       try {
-                                        final File? file =
-                                            await generarPdfBitacora(
-                                                b, checklist, firma);
+                                        final File? file = await generarPdfBitacora(b, checklist, firma);
                                         if (file == null) {
                                           scaffold.showSnackBar(const SnackBar(
                                               content: Text(
@@ -292,10 +289,9 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                       ScaffoldMessenger.of(context);
 
                                   List<ChecklistItem> checklist =
-                                      await bitacoraController
-                                          .obtenerChecklistItem(b.id!);
-                                  Firma? firma = await bitacoraController
-                                      .obtenerSignature(b.id!);
+                                    await bitacoraController.obtenerChecklistItem(b.id!);
+                                  Firma? firma = 
+                                    await bitacoraController.obtenerSignature(b.id!);
 
                                   if (firma == null) {
                                     scaffold.showSnackBar(

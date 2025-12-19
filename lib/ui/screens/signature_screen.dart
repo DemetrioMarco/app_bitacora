@@ -79,12 +79,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
           await controller.agregarFirma(firma);
           break;
         
-        case 'LIBERO':
-          firma.libero = widget.nombre;
-          firma.firmaLibero = base64String;
-          await controller.agregarFirma(firma);
-          break;
-        
         default:
           debugPrint("Rol desconocido: ${widget.rol}");
           break;

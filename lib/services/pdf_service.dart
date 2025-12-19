@@ -249,10 +249,10 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
       (firma.firmaVerifico != null && firma.firmaVerifico!.isNotEmpty)
           ? pw.MemoryImage(base64Decode(firma.firmaVerifico!))
           : null;
-  final pw.ImageProvider? liberoImage =
-      (firma.firmaLibero != null && firma.firmaLibero!.isNotEmpty)
-          ? pw.MemoryImage(base64Decode(firma.firmaLibero!))
-          : null;
+  // final pw.ImageProvider? liberoImage =
+  //     (firma.firmaLibero != null && firma.firmaLibero!.isNotEmpty)
+  //         ? pw.MemoryImage(base64Decode(firma.firmaLibero!))
+  //         : null;
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.stretch,
     children: [
@@ -366,53 +366,53 @@ pw.Widget buildThreeSignaturesSection(Firma firma) {
           pw.SizedBox(width: 12),
 
           // Firma 3
-          pw.Expanded(
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                pw.Text("Libero",style: const pw.TextStyle(
-                              fontSize: 9,
-                              color: PdfColors.grey600,
-                            ),),
-                pw.Container(
-                  height: 60,
-                  decoration: pw.BoxDecoration(
-                    border: pw.Border.all(
-                      color: PdfColors.grey400,
-                      width: 0.8,
-                    ),
-                  ),
-                  child: liberoImage != null
-                      ? pw.Center(
-                          child: pw.Image(liberoImage, fit: pw.BoxFit.contain))
-                      : pw.Center(
-                          child: pw.Text(
-                            'Firma 1',
-                            style: const pw.TextStyle(
-                              fontSize: 9,
-                              color: PdfColors.grey600,
-                            ),
-                          ),
-                        ),
-                ),
-                pw.SizedBox(height: 6),
-                pw.Container(
-                  height: 0.5,
-                  color: PdfColors.black,
-                  margin: const pw.EdgeInsets.symmetric(horizontal: 8),
-                ),
-                pw.SizedBox(height: 4),
-                pw.Text(
-                  firma.libero ?? 'Nombre 3',
-                  style: const pw.TextStyle(
-                    fontSize: 9,
-                    color: PdfColors.grey600,
-                  ),
-                  textAlign: pw.TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+          // pw.Expanded(
+          //   child: pw.Column(
+          //     crossAxisAlignment: pw.CrossAxisAlignment.center,
+          //     children: [
+          //       pw.Text("Libero",style: const pw.TextStyle(
+          //                     fontSize: 9,
+          //                     color: PdfColors.grey600,
+          //                   ),),
+          //       pw.Container(
+          //         height: 60,
+          //         decoration: pw.BoxDecoration(
+          //           border: pw.Border.all(
+          //             color: PdfColors.grey400,
+          //             width: 0.8,
+          //           ),
+          //         ),
+          //         child: liberoImage != null
+          //             ? pw.Center(
+          //                 child: pw.Image(liberoImage, fit: pw.BoxFit.contain))
+          //             : pw.Center(
+          //                 child: pw.Text(
+          //                   'Firma 1',
+          //                   style: const pw.TextStyle(
+          //                     fontSize: 9,
+          //                     color: PdfColors.grey600,
+          //                   ),
+          //                 ),
+          //               ),
+          //       ),
+          //       pw.SizedBox(height: 6),
+          //       pw.Container(
+          //         height: 0.5,
+          //         color: PdfColors.black,
+          //         margin: const pw.EdgeInsets.symmetric(horizontal: 8),
+          //       ),
+          //       pw.SizedBox(height: 4),
+          //       pw.Text(
+          //         firma.libero ?? 'Nombre 3',
+          //         style: const pw.TextStyle(
+          //           fontSize: 9,
+          //           color: PdfColors.grey600,
+          //         ),
+          //         textAlign: pw.TextAlign.center,
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     ],

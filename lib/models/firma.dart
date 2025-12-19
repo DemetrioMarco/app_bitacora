@@ -5,8 +5,6 @@ class Firma {
   String? firmaEjecuto;
   String? verifico;
   String? firmaVerifico;
-  String? libero;
-  String? firmaLibero;
 
   Firma({
     this.id,
@@ -14,9 +12,7 @@ class Firma {
     this.ejecuto,
     this.firmaEjecuto,
     this.verifico,
-    this.firmaVerifico,
-    this.libero,
-    this.firmaLibero,
+    this.firmaVerifico
   });
 
   Map<String, Object?> toMap() {
@@ -26,9 +22,7 @@ class Firma {
       'ejecuto': ejecuto,
       'firma_ejecuto': firmaEjecuto,
       'verifico': verifico,
-      'firma_verifico': firmaVerifico,
-      'libero':libero,
-      'firma_libero': firmaLibero
+      'firma_verifico': firmaVerifico
     };
   }
 
@@ -39,9 +33,7 @@ class Firma {
       ejecuto: m['ejecuto'] as String?,
       firmaEjecuto: m['firma_ejecuto'] as String?,
       verifico: m['verifico'] as String?,
-      firmaVerifico: m['firma_verifico'] as String?,
-      libero: m['libero'] as String?,
-      firmaLibero: m['firma_libero'] as String?
+      firmaVerifico: m['firma_verifico'] as String?
     );
   }
 }

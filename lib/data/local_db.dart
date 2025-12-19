@@ -22,7 +22,7 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-    // deleteDatabase(path);
+     deleteDatabase(path);
     // print('Elimando BD');
     }
 
@@ -92,7 +92,8 @@ class LocalDB {
         tipo_limpieza TEXT NOT NULL,
         frecuencia TEXT NOT NULL,
         item_monday TEXT NOT NULL,
-        pdf TEXT
+        pdf TEXT,
+        foto TEXT
       )
     ''';
     await db.execute(sqlBitacora);
@@ -162,9 +163,7 @@ class LocalDB {
         ejecuto TEXT,
         firma_ejecuto TEXT,
         verifico TEXT,
-        firma_verifico TEXT,
-        libero TEXT,
-        firma_libero TEXT
+        firma_verifico TEXT
       )
     ''');
 
