@@ -204,7 +204,7 @@ class MondayService {
   Future<String?> cerrarTareaYAdjuntarPdf({
     required dynamic itemId,
     required String updateBody,
-   // required File pdfFile,
+    required String fotoPath,
     required String pdfFile,
     required String nameFile,
   }) async {
@@ -215,6 +215,14 @@ class MondayService {
 
       final fileId = await MondayService.instance
           .uploadFileToUpdate(updateId: updateId, file: pdfFile);
+
+      if (fileId.isEmpty) return null;
+
+      if(fotoPath.trim().isNotEmpty){
+        final fotoFileId = await MondayService.instance.uploadFileToUpdate(updateId: updateId, file: fotoPath);
+
+        if(fotoFileId.isEmpty) return null;
+      }
       
       if(fileId.isNotEmpty){
         await MondayService.instance.changeItemStatus(itemId: itemId, status: "Listo");
@@ -285,7 +293,6 @@ class MondayService {
   Future<String> uploadFileToUpdate({
     required dynamic updateId,
     required String file
-   // required File file,
   }) async {
     final updateIdStr = updateId.toString();
 
@@ -304,8 +311,6 @@ class MondayService {
       ),
     );
     
-
-
 
     // Enviar request
     final streamedResponse = await request.send().timeout(_timeout);

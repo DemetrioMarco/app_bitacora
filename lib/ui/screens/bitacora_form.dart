@@ -77,6 +77,8 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
         preferredCameraDevice: CameraDevice.rear
       );
 
+      if(!mounted) return;
+
       if(picked == null){
         // Usuario canceló la cámara
         return;

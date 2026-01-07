@@ -66,6 +66,24 @@ class SeedService {
         Equipo(nombre: 'Plataforma Tanque de acero INOX TAN-20'),
         Equipo(nombre: 'Plataforma Tanques'),
         Equipo(nombre: 'Plataforma Acceso'),
+        Equipo(nombre: 'Mesa de trabajo 1 - Fundición'),
+        Equipo(nombre: 'Mesa de trabajo 2 - Plataforma de leche'),
+        Equipo(nombre: 'Mesa de trabajo 3 - Plataforma cocoa'),
+        Equipo(nombre: 'Mesa de trabajo 4 - Línea 1'),
+        Equipo(nombre: 'Mesa de trabajo 5'),
+        Equipo(nombre: 'Mesa de trabajo 6'),
+        Equipo(nombre: 'Cuarto de lavado'),
+        Equipo(nombre: 'Pisos - Cuarto Fundición'),
+        Equipo(nombre: 'Pisos - Polvos'),
+        Equipo(nombre: 'Pisos - Líquidos'),
+        Equipo(nombre: 'Pisos - Cuarto de compresores'),
+        Equipo(nombre: 'Pisos - Granja de tanques'),
+        Equipo(nombre: 'Pisos - Patio de carga'),
+        Equipo(nombre: 'Pisos - Pasillo almacén a cuarto de reciclaje'),
+        Equipo(nombre: 'Pisos - Pasillo peatonal PRP Floor'),
+        Equipo(nombre: 'Pisos - Pasillo montacarga PRP Floor'),
+        Equipo(nombre: 'Pisos - Sólidos'),
+        Equipo(nombre: 'Pisos - Vermicelli')
       ];
 
       // Insertar equipo
@@ -189,6 +207,54 @@ class SeedService {
             activo: true,
             fechaCreacion: DateTime.now(),
             fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 19,
+            nombre: 'Líquidos',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 20,
+            nombre: 'Shipping',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 21,
+            nombre: 'Pasillos',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 22,
+            nombre: 'Solidos',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 23,
+            nombre: 'Vermicelli',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 24,
+            nombre: 'Plataforma de leche',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 25,
+            nombre: 'Plataforma de cocoa',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
+        SubArea(
+            id: 26,
+            nombre: 'Cuarto de lavado',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
       ];
 
       for (final a in subAreas) {
@@ -239,6 +305,12 @@ class SeedService {
             activo: true,
             fechaCreacion: DateTime.now(),
             fechaActualizacion: DateTime.now()),
+        Area(
+            id: 7,
+            nombre: 'General',
+            activo: true,
+            fechaCreacion: DateTime.now(),
+            fechaActualizacion: DateTime.now()),
       ];
 
       for (final a in areas) {
@@ -255,7 +327,8 @@ class SeedService {
       final frecuencias = [
         Frecuencia(nombre: 'Semanal'),
         Frecuencia(nombre: 'Quincenal'),
-        Frecuencia(nombre: '2 veces por semana')
+        Frecuencia(nombre: '2 veces por semana'),
+        Frecuencia(nombre: 'Diario')
       ];
 
       for (final f in frecuencias) {
@@ -299,6 +372,32 @@ class SeedService {
         Elemento(nombre: 'Tubería inferior'),
         Elemento(nombre: 'Tuberías'),
         Elemento(nombre: 'Tuberías superior'),
+        Elemento(nombre: 'Pisos'),
+        Elemento(nombre: 'Acrílico (Ambos lados)'),
+        Elemento(nombre: 'Marco'),
+        Elemento(nombre: 'Base superior (Ambos lados)'),
+        Elemento(nombre: 'Base inferior (Ambos lados)'),
+        Elemento(nombre: 'Paredes'),
+        Elemento(nombre: 'Ayudas visuales'),
+        Elemento(nombre: 'Mesas'),
+        Elemento(nombre: 'Puertas'),
+        Elemento(nombre: 'Bases'),
+        Elemento(nombre: 'Pistolas'),
+        Elemento(nombre: 'Tarja'),
+        Elemento(nombre: 'Sistema espumador'),
+        Elemento(nombre: 'Perchero mandiles'),
+        Elemento(nombre: 'Perchero utensilios'),
+        Elemento(nombre: 'Banda de transición'),
+        Elemento(nombre: 'Guardas metálicas'),
+        Elemento(nombre: 'Porta Mangueras'),
+        Elemento(nombre: 'Perchero para botas'),
+        Elemento(nombre: 'Despachador para bolsas'),
+        Elemento(nombre: 'Repisas'),
+        Elemento(nombre: 'Coladeras'),
+        Elemento(nombre: 'Botas de basura'),
+        Elemento(nombre: 'Techos falsos'),
+        Elemento(nombre: 'Tarimas antiderrames'),
+        Elemento(nombre: 'Lamparas')
       ];
 
       // insertar elemento
@@ -314,17 +413,13 @@ class SeedService {
     if (countEquipoElemento == 0) {
       final checklist = [
 // 1 Conche CN-3310
-        EquipoElemento(
-            equipoId: 1, elementoId: 13, orden: 1), // Motores aereos / Motor
-        EquipoElemento(
-            equipoId: 1, elementoId: 17, orden: 2), // Panel de control
-        EquipoElemento(equipoId: 1, elementoId: 27, orden: 3), // Tuberías
-        EquipoElemento(
-            equipoId: 1, elementoId: 26, orden: 4), // Tubería inferior
-        EquipoElemento(
-            equipoId: 1, elementoId: 22, orden: 5), // Soportes estructurales
-        EquipoElemento(equipoId: 1, elementoId: 3, orden: 6), // Bombas
-        EquipoElemento(equipoId: 1, elementoId: 1, orden: 7), // Barandales
+        EquipoElemento(equipoId: 1, elementoId: 13, orden: 1), 
+        EquipoElemento(equipoId: 1, elementoId: 17, orden: 2), 
+        EquipoElemento(equipoId: 1, elementoId: 27, orden: 3), 
+        EquipoElemento(equipoId: 1, elementoId: 26, orden: 4), 
+        EquipoElemento(equipoId: 1, elementoId: 22, orden: 5), 
+        EquipoElemento(equipoId: 1, elementoId: 3, orden: 6), 
+        EquipoElemento(equipoId: 1, elementoId: 1, orden: 7), 
 
 // 2 Conche CN-3320
         EquipoElemento(equipoId: 2, elementoId: 13, orden: 1),
@@ -550,6 +645,107 @@ class SeedService {
         EquipoElemento(equipoId: 40, elementoId: 7, orden: 2),
         EquipoElemento(equipoId: 40, elementoId: 1, orden: 3),
         EquipoElemento(equipoId: 40, elementoId: 18, orden: 4),
+
+// 41 Mesa de trabajo 1
+        EquipoElemento(equipoId: 41, elementoId: 30, orden: 1),
+        EquipoElemento(equipoId: 41, elementoId: 31, orden: 2),
+        EquipoElemento(equipoId: 41, elementoId: 32, orden: 3),
+        EquipoElemento(equipoId: 41, elementoId: 33, orden: 4),
+        EquipoElemento(equipoId: 41, elementoId: 22, orden: 5),
+
+// 42 Mesa de trabajo 2
+        EquipoElemento(equipoId: 42, elementoId: 30, orden: 1),
+        EquipoElemento(equipoId: 42, elementoId: 31, orden: 2),
+        EquipoElemento(equipoId: 42, elementoId: 32, orden: 3),
+        EquipoElemento(equipoId: 42, elementoId: 33, orden: 4),
+        EquipoElemento(equipoId: 42, elementoId: 22, orden: 5),
+
+// 43 Mesa de trabajo 3
+        EquipoElemento(equipoId: 43, elementoId: 30, orden: 1),
+        EquipoElemento(equipoId: 43, elementoId: 31, orden: 2),
+        EquipoElemento(equipoId: 43, elementoId: 32, orden: 3),
+        EquipoElemento(equipoId: 43, elementoId: 33, orden: 4),
+        EquipoElemento(equipoId: 43, elementoId: 22, orden: 5),
+
+// 44 Mesa de trabajo 4
+        EquipoElemento(equipoId: 44, elementoId: 30, orden: 1),
+        EquipoElemento(equipoId: 44, elementoId: 31, orden: 2),
+        EquipoElemento(equipoId: 44, elementoId: 32, orden: 3),
+        EquipoElemento(equipoId: 44, elementoId: 33, orden: 4),
+        EquipoElemento(equipoId: 44, elementoId: 22, orden: 5),
+
+// 45 Mesa de trabajo 5
+        EquipoElemento(equipoId: 45, elementoId: 30, orden: 1),
+        EquipoElemento(equipoId: 45, elementoId: 31, orden: 2),
+        EquipoElemento(equipoId: 45, elementoId: 32, orden: 3),
+        EquipoElemento(equipoId: 45, elementoId: 33, orden: 4),
+        EquipoElemento(equipoId: 45, elementoId: 22, orden: 5),
+
+// 46 Mesa de trabajo 6
+        EquipoElemento(equipoId: 46, elementoId: 30, orden: 1),
+        EquipoElemento(equipoId: 46, elementoId: 31, orden: 2),
+        EquipoElemento(equipoId: 46, elementoId: 32, orden: 3),
+        EquipoElemento(equipoId: 46, elementoId: 33, orden: 4),
+        EquipoElemento(equipoId: 46, elementoId: 22, orden: 5),
+
+// 47 Cuarto de lavado
+        EquipoElemento(equipoId: 47, elementoId: 34, orden: 1),
+        EquipoElemento(equipoId: 47, elementoId: 35, orden: 2),
+        EquipoElemento(equipoId: 47, elementoId: 27, orden: 3),
+        EquipoElemento(equipoId: 47, elementoId: 36, orden: 4),
+        EquipoElemento(equipoId: 47, elementoId: 37, orden: 5),
+        EquipoElemento(equipoId: 47, elementoId: 12, orden: 6),
+        EquipoElemento(equipoId: 47, elementoId: 38, orden: 7),
+        EquipoElemento(equipoId: 47, elementoId: 39, orden: 8),
+        EquipoElemento(equipoId: 47, elementoId: 40, orden: 9),
+        EquipoElemento(equipoId: 47, elementoId: 41, orden: 10),
+        EquipoElemento(equipoId: 47, elementoId: 42, orden: 11),
+        EquipoElemento(equipoId: 47, elementoId: 43, orden: 12),
+        EquipoElemento(equipoId: 47, elementoId: 44, orden: 13),
+        EquipoElemento(equipoId: 47, elementoId: 29, orden: 14),
+        EquipoElemento(equipoId: 47, elementoId: 45, orden: 15),
+        EquipoElemento(equipoId: 47, elementoId: 46, orden: 16),
+        EquipoElemento(equipoId: 47, elementoId: 47, orden: 17),
+        EquipoElemento(equipoId: 47, elementoId: 48, orden: 18),
+        EquipoElemento(equipoId: 47, elementoId: 49, orden: 19),
+        EquipoElemento(equipoId: 47, elementoId: 50, orden: 20),
+        EquipoElemento(equipoId: 47, elementoId: 51, orden: 21),
+        EquipoElemento(equipoId: 47, elementoId: 52, orden: 22),
+        EquipoElemento(equipoId: 47, elementoId: 53, orden: 23),
+        EquipoElemento(equipoId: 47, elementoId: 54, orden: 24),
+
+// 48 Pisos - cuarto fundición
+        EquipoElemento(equipoId: 48, elementoId: 29, orden: 1),
+
+// 49 Pisos - Polvos
+        EquipoElemento(equipoId: 49, elementoId: 29, orden: 1),
+
+// 50 Pisos - Líquidos
+        EquipoElemento(equipoId: 50, elementoId: 29, orden: 1),
+
+// 51 Pisos - Cuarto compresores
+        EquipoElemento(equipoId: 51, elementoId: 29, orden: 1),
+
+// 52 Pisos - Granja de tanques
+        EquipoElemento(equipoId: 52, elementoId: 29, orden: 1),
+
+// 53 Pisos - Patio de carga
+        EquipoElemento(equipoId: 53, elementoId: 29, orden: 1),
+
+// 54 Pisos - Pasillo almacén a cuarto
+        EquipoElemento(equipoId: 54, elementoId: 29, orden: 1),
+
+// 55 Pisos - Pasillo peatonal
+        EquipoElemento(equipoId: 55, elementoId: 29, orden: 1),
+
+// 56 Pisos - Pasillo montecarga
+        EquipoElemento(equipoId: 56, elementoId: 29, orden: 1),
+
+// 57 Pisos - Sólidos
+        EquipoElemento(equipoId: 57, elementoId: 29, orden: 1),
+
+// 58 Pisos - Vermicelli
+        EquipoElemento(equipoId: 58, elementoId: 29, orden: 1),
       ];
 
       for (final e in checklist) {
@@ -825,6 +1021,114 @@ class SeedService {
             areaId: 6,
             subAreaId: 18,
             frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 41,
+            areaId: 1,
+            subAreaId: 4,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 42,
+            areaId: 1,
+            subAreaId: 24,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 43,
+            areaId: 1,
+            subAreaId: 25,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 44,
+            areaId: 2,
+            subAreaId: 3,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 45,
+            areaId: 2,
+            subAreaId: 3,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 46,
+            areaId: 2,
+            subAreaId: 3,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 47,
+            areaId: 7,
+            subAreaId: 26,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 48,
+            areaId: 1,
+            subAreaId: 4,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 49,
+            areaId: 1,
+            subAreaId: 1,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 50,
+            areaId: 2,
+            subAreaId: 19,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 51,
+            areaId: 2,
+            subAreaId: 19,
+            frecuenciaId: 1,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 52,
+            areaId: 3,
+            subAreaId: 20,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 53,
+            areaId: 3,
+            subAreaId: 20,
+            frecuenciaId: 3,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 54,
+            areaId: 7,
+            subAreaId: 21,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 55,
+            areaId: 7,
+            subAreaId: 21,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 56,
+            areaId: 7,
+            subAreaId: 21,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 57,
+            areaId: 4,
+            subAreaId: 22,
+            frecuenciaId: 4,
+            tipoLimpiezaId: 1),
+        EquipoRelacion(
+            equipoId: 58,
+            areaId: 4,
+            subAreaId: 23,
+            frecuenciaId: 4,
             tipoLimpiezaId: 1),
       ];
 

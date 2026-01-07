@@ -163,7 +163,7 @@ class LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                '© Saferfs - Maxival - V.2.1',
+                '© Maxival - V.2.3',
                 style: TextStyle(color: Colors.grey[600]),
               )
             ],

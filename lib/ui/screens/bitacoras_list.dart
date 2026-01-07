@@ -351,6 +351,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                     final String? enviado = await MondayService.instance.cerrarTareaYAdjuntarPdf(
                                       itemId: b.itemMonday, 
                                       updateBody: "Envio evidencia desde app", 
+                                      fotoPath: b.foto ?? '',
                                       pdfFile: fileToUpload, 
                                       nameFile: "bitacora_${b.id}"
                                     );
