@@ -17,4 +17,35 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Versiones
 
-- V2.3 Se agrega nuevos equipos diarios
+### v2.3
+- Agregar equipos en catalogo de la app
+- Agregar equipos en catalogo de Monday
+
+### v2.2
+- Dejar dos firmas en el PDF
+- Agregar foto
+
+### v2.1
+- Cambiar estatus de tarea en Monday a cargada
+- Carga de tareas en celular según Operador
+- Cambiar estatus de tarea en Monday a Cerrada 
+- Subir PDF a la tarea de Monday
+
+### v2.0
+- Conexión a internet
+- Conexión con Monday
+
+### v1.2
+- Creación de usuarios
+- Usuario Admin privilegios de borrar
+
+### v1.1
+- Cargar tarea solo con seleccionar equipo
+- Relación de equipo con área, linea, subarea, frecuencia
+
+### v1.0
+- Creación de tareas en la app (Seleccionar equipo, fecha, área, linea, frecuencia)
+- Relación de equipo con Checklist(elementos)
+- Creación de PDF para enviar, descargar, imprimir
+- Versión de apps sin internet
+
