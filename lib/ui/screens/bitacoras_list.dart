@@ -44,38 +44,103 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     await provider.cargarBitacoras();
   }
 
-  // Cargar actividades desde Monday
   Future<void> _cargarItems() async {
-    setState(() => isLoading = true);
-    final AppUser? user =
-        Provider.of<UserProvider>(context, listen: false).user;
-    try {
-      final items = await MondayService.instance.fetchItemsByTurnoAndOperador(
-        turno: '1er Turno',
-        operador: user!.username,
-      );
+  if (!mounted) return;
 
-      if (items.isNotEmpty) {
-        for (final i in items) {
-          int idEquipo = int.parse(i['equipoId']);
-          final fecha = DateTime.parse(i['date']);
-          final itemId = i['itemId'];
-          final newBitacora =
-              await catController.crearBitacora(idEquipo, fecha, itemId);
-          bitacoraController.guardar(newBitacora!);
+  setState(() => isLoading = true);
 
-          await MondayService.instance
-              .changeItemStatus(itemId: itemId, status: 'Cargada');
-        }
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  final user = userProvider.user;
+
+  if (user == null || user.username.isEmpty) {
+    debugPrint('Usuario no disponible aún');
+    if (mounted) setState(() => isLoading = false);
+    return;
+  }
+
+  try {
+    final items =
+        await MondayService.instance.fetchItemsByTurnoAndOperador(
+      turno: '1er Turno',
+      operador: user.username,
+    );
+
+    for (final i in items) {
+      final equipoIdStr = i['equipoId'];
+      if (equipoIdStr == null || equipoIdStr.isEmpty) continue;
+
+      final idEquipo = int.tryParse(equipoIdStr);
+      if (idEquipo == null) continue;
+
+      final dateStr = i['date'];
+      if (dateStr == null || dateStr.isEmpty) continue;
+
+      final fecha = DateTime.tryParse(dateStr);
+      if (fecha == null) continue;
+
+      final itemId = i['itemId'];
+      if (itemId == null || itemId.isEmpty) continue;
+
+      final newBitacora =
+          await catController.crearBitacora(idEquipo, fecha, itemId);
+
+      if (newBitacora == null) {
+        debugPrint('No se pudo crear bitácora para item $itemId');
+        continue;
       }
 
-      await _loadBitacoras();
-    } catch (e) {
-      if(kDebugMode)  print('Error: $e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+      bitacoraController.guardar(newBitacora);
+
+      await MondayService.instance
+          .changeItemStatus(itemId: itemId, status: 'Cargada');
     }
+
+    await _loadBitacoras();
+  } catch (e, stack) {
+    debugPrint('ERROR _cargarItems: $e');
+    debugPrintStack(stackTrace: stack);
+  } finally {
+    if (mounted) setState(() => isLoading = false);
   }
+}
+
+
+  // Cargar actividades desde Monday
+  // Future<void> _cargarItems() async {
+  //   if (!mounted) return;
+    
+  //   setState(() => isLoading = true);
+  //   final AppUser? user = Provider.of<UserProvider>(context, listen: false).user;
+
+    
+  //   try {
+  //     final items = await MondayService.instance.fetchItemsByTurnoAndOperador(
+  //       turno: '1er Turno',
+  //       operador: user!.username,
+  //     );
+
+  //     if (items.isNotEmpty) {
+  //       for (final i in items) {
+  //         int idEquipo = int.parse(i['equipoId']);
+  //         final fecha = DateTime.parse(i['date']);
+  //         final itemId = i['itemId'];
+  //         final newBitacora =
+  //             await catController.crearBitacora(idEquipo, fecha, itemId);
+  //         bitacoraController.guardar(newBitacora!);
+
+  //         await MondayService.instance
+  //             .changeItemStatus(itemId: itemId, status: 'Cargada');
+  //       }
+  //     }
+
+  //     await _loadBitacoras();
+  //   } catch (e, stack) {
+  //     debugPrint('ERROR MONDAY: $e');
+  //     debugPrintStack(stackTrace: stack);
+  //   } finally {
+  //     if (mounted) setState(() => isLoading = false);
+  //   }
+  // }
 
 
   @override

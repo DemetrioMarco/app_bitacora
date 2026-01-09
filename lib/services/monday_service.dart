@@ -12,7 +12,7 @@ class MondayService {
   static final MondayService instance = MondayService._(http.Client());
 
   static const _endpoint = Env.mondayUrl;
-  static const Duration _timeout = Duration(seconds: 15);
+  static const Duration _timeout = Duration(seconds: 1500);
 
   factory MondayService({http.Client? client}) =>
       MondayService._(client ?? http.Client());
@@ -28,6 +28,9 @@ class MondayService {
     final body = jsonEncode({'query': query});
 
     http.Response response;
+
+    debugPrint('POST Monday -> $uri');
+    debugPrint('Timeout -> $_timeout'); 
 
     try {
       response = await _client
@@ -168,6 +171,7 @@ class MondayService {
           )
           .timeout(_timeout);
     } on SocketException catch (e) {
+      debugPrint('SOCKET ERROR: ${e.osError}');
       throw Exception('Network error: ${e.message}');
     } on TimeoutException {
       throw Exception('Request timed out after ${_timeout.inSeconds}s');
