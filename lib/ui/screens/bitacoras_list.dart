@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_bitacora/utils/monday_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
@@ -96,51 +97,31 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     }
 
     await _loadBitacoras();
+
+  } on MondayRateLimitException catch (e){
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(e.message),
+      backgroundColor: Colors.orange,
+      duration: const Duration(seconds: 5),
+    ),
+  );
   } catch (e, stack) {
     debugPrint('ERROR _cargarItems: $e');
     debugPrintStack(stackTrace: stack);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al cargar datos: $e'),
+        backgroundColor: Colors.redAccent,
+      )
+    );
   } finally {
     if (mounted) setState(() => isLoading = false);
   }
 }
-
-
-  // Cargar actividades desde Monday
-  // Future<void> _cargarItems() async {
-  //   if (!mounted) return;
-    
-  //   setState(() => isLoading = true);
-  //   final AppUser? user = Provider.of<UserProvider>(context, listen: false).user;
-
-    
-  //   try {
-  //     final items = await MondayService.instance.fetchItemsByTurnoAndOperador(
-  //       turno: '1er Turno',
-  //       operador: user!.username,
-  //     );
-
-  //     if (items.isNotEmpty) {
-  //       for (final i in items) {
-  //         int idEquipo = int.parse(i['equipoId']);
-  //         final fecha = DateTime.parse(i['date']);
-  //         final itemId = i['itemId'];
-  //         final newBitacora =
-  //             await catController.crearBitacora(idEquipo, fecha, itemId);
-  //         bitacoraController.guardar(newBitacora!);
-
-  //         await MondayService.instance
-  //             .changeItemStatus(itemId: itemId, status: 'Cargada');
-  //       }
-  //     }
-
-  //     await _loadBitacoras();
-  //   } catch (e, stack) {
-  //     debugPrint('ERROR MONDAY: $e');
-  //     debugPrintStack(stackTrace: stack);
-  //   } finally {
-  //     if (mounted) setState(() => isLoading = false);
-  //   }
-  // }
 
 
   @override
@@ -444,7 +425,14 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                       );
                                     }
 
-
+                                  } on MondayRateLimitException catch (e){
+                                    scaffold.showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.message),
+                                        backgroundColor: Colors.orange,
+                                        duration: const Duration(seconds: 6),
+                                      ),
+                                    );
                                      
                                   } catch (e, st) {
                                     if (kDebugMode) {

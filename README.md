@@ -17,6 +17,13 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Versiones
 
+### v2.4
+- Modificación del Token para nuevos celulares
+- cambio de timeout para query a Monday
+- Captura de exceptions servicio Monday
+- Monstrar exceptions en pantalla de usuario
+- Serializar las consultas
+
 ### v2.3
 - Agregar equipos en catalogo de la app
 - Agregar equipos en catalogo de Monday
