@@ -12,7 +12,10 @@ class MondayService {
   static final MondayService instance = MondayService._(http.Client());
 
   static const _endpoint = Env.mondayUrl;
-  static const Duration _timeout = Duration(seconds: 1500);
+  static const Duration _queryTimeout = Duration(seconds: 30);
+  static const Duration _mutationTimeout = Duration(seconds: 45);
+  static const Duration _fileTimeout = Duration(seconds: 120);
+
 
   factory MondayService({http.Client? client}) =>
       MondayService._(client ?? http.Client());
@@ -30,7 +33,7 @@ class MondayService {
     http.Response response;
 
     debugPrint('POST Monday -> $uri');
-    debugPrint('Timeout -> $_timeout'); 
+    debugPrint('Timeout -> $_queryTimeout'); 
 
     try {
       response = await _client
@@ -40,11 +43,11 @@ class MondayService {
                 'Authorization': Env.mondayToken,
               },
               body: body)
-          .timeout(_timeout);
+          .timeout(_queryTimeout);
     } on SocketException catch (e) {
       throw Exception('Network error: ${e.message}');
     } on TimeoutException {
-      throw Exception('Request timed out after ${_timeout.inSeconds}s');
+      throw Exception('Request timed out after ${_queryTimeout.inSeconds}s');
     } catch (e) {
       throw Exception('Request error: $e');
     }
@@ -169,12 +172,12 @@ class MondayService {
             },
             body: body,
           )
-          .timeout(_timeout);
+          .timeout(_mutationTimeout);
     } on SocketException catch (e) {
       debugPrint('SOCKET ERROR: ${e.osError}');
       throw Exception('Network error: ${e.message}');
     } on TimeoutException {
-      throw Exception('Request timed out after ${_timeout.inSeconds}s');
+      throw Exception('Request timed out after ${_mutationTimeout.inSeconds}s');
     } catch (e) {
       throw Exception('Request error: $e');
     }
@@ -269,7 +272,7 @@ class MondayService {
           },
           body: jsonEncode({'query': mutation}),
         )
-        .timeout(_timeout);
+        .timeout(_mutationTimeout);
 
     if (resp.statusCode != 200) {
       throw Exception('HTTP ${resp.statusCode}: ${resp.body}');
@@ -317,7 +320,7 @@ class MondayService {
     
 
     // Enviar request
-    final streamedResponse = await request.send().timeout(_timeout);
+    final streamedResponse = await request.send().timeout(_fileTimeout);
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode != 200) {
