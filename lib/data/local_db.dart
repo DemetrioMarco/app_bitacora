@@ -8,7 +8,7 @@ class LocalDB {
   LocalDB._internal();
 
   static Database? _db;
-  static const _dbName = 'saferfood.db';
+  static const _dbName = 'saferfsAPI.db';
   static const _dbVersion = 1;
 
   Future<Database> get db async {
@@ -22,18 +22,15 @@ class LocalDB {
 
     if (kDebugMode) {
       print('Path:\n$path');
-    //  deleteDatabase(path);
-    // print('Elimando BD');
+      deleteDatabase(path);
+      print('Elimando BD');
     }
 
-    
     return openDatabase(path,
         version: _dbVersion, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onCreate(Database db, int version) async {
-
-    
     const sql1 = '''
       CREATE TABLE catalogos_version (
         table_name TEXT PRIMARY KEY,
@@ -98,24 +95,75 @@ class LocalDB {
     ''';
     await db.execute(sqlBitacora);
 
+    const sqlBitacoraAPI = '''
+  CREATE TABLE IF NOT EXISTS bitacorasAPI (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    equipo_id INTEGER NOT NULL,
+    fecha TEXT NOT NULL,
+    item_monday TEXT UNIQUE NOT NULL,
+    pdf TEXT,
+    foto TEXT
+  )
+''';
+    await db.execute(sqlBitacoraAPI);
+
     const sqlEquipo = '''
       CREATE TABLE IF NOT EXISTS equipos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL UNIQUE
+        nombre TEXT NOT NULL UNIQUE,
+        descripcion TEXT,
+        area TEXT,
+        subarea TEXT,
+        frecuencia TEXT,
+        tipo TEXT,
+        tipoLimpieza TEXT
       )
     ''';
     await db.execute(sqlEquipo);
 
+    const sqlEquipoAPI = '''
+      CREATE TABLE IF NOT EXISTS equiposAPI (
+        id INTEGER PRIMARY KEY UNIQUE,
+        nombre TEXT NOT NULL UNIQUE,
+        descripcion TEXT,
+        area TEXT,
+        subarea TEXT,
+        frecuencia TEXT,
+        tipo TEXT,
+        tipoLimpieza TEXT
+      )
+    ''';
+    await db.execute(sqlEquipoAPI);
+
     await db.execute('''
       CREATE TABLE IF NOT EXISTS elementos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
+        nombre TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS elementosAPI (
+        id INTEGER PRIMARY KEY,
         nombre TEXT NOT NULL
       )
     ''');
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS equipo_elemento (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
+        equipo_id INTEGER NOT NULL,
+        elemento_id INTEGER NOT NULL,
+        orden INTEGER NOT NULL,
+        UNIQUE(equipo_id, elemento_id),
+        FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE,
+        FOREIGN KEY (elemento_id) REFERENCES elementos(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS equipo_elemento_API (
+        id INTEGER PRIMARY KEY,
         equipo_id INTEGER NOT NULL,
         elemento_id INTEGER NOT NULL,
         orden INTEGER NOT NULL,
@@ -167,14 +215,14 @@ class LocalDB {
       )
     ''');
 
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS user(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        role TEXT,
-        pass TEXT
-      )
-    ''');
+    // await db.execute('''
+    //   CREATE TABLE IF NOT EXISTS user(
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     username TEXT,
+    //     role TEXT,
+    //     pass TEXT
+    //   )
+    // ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldV, int newV) async {
@@ -182,21 +230,7 @@ class LocalDB {
       print('onUpgrade oldV=$oldV newV=$newV');
     }
     if (oldV < 2 && newV >= 2) {
-      // migración simple: recrear tabla (o puedes copiar columnas como te di antes)
-      await db.execute('DROP TABLE IF EXISTS areas');
-      const sql = '''
-        CREATE TABLE areas (
-          id TEXT PRIMARY KEY,
-          nombre TEXT,
-          activo INTEGER,
-          fecha_creacion TEXT,
-          fecha_actualizacion TEXT
-        )
-      ''';
-      if (kDebugMode) {
-        print('Executing onUpgrade SQL:\n$sql');
-      }
-      await db.execute(sql);
+     
     }
   }
 

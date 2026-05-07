@@ -1,27 +1,35 @@
 class AppUser {
-  final int? id;
-  final String username;
-  final String role;
-  final String pass;
+  final int id;
+  final String nombre;
+  final String email;
+  final String rol;
+  final bool? enabled;
 
   AppUser({
-    this.id,
-    required this.username,
-    required this.role,
-    required this.pass
+    required this.id,
+    required this.nombre,
+    required this.email,
+    required this.rol,
+    this.enabled,
   });
 
   Map<String, dynamic> toMap() => {
     'id':id,
-    'username': username,
-    'role': role,
-    'pass': pass
+    'nombre': nombre,
+    'email': email,
+    'role': rol,
+    'enabled':enabled
   };
 
-  factory AppUser.fromMap(Map<String, dynamic> m) => AppUser(
-    id:m['id'] as int?,
-    username: m['username'] as String,
-    role: m['role'] as String,
-    pass: m['pass'] as String
-  );
+  factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
+        id: json['id'] as int,
+        nombre: json['nombre'] as String,
+        email: json['email'] as String,
+        rol: json['rol'] as String,
+        enabled: json['enabled'] as bool?,
+      );
+
+  // Compatibilidad con el código existente
+  String get role => rol;
+  String get username => email;
 }

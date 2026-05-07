@@ -1,7 +1,6 @@
 import 'package:app_bitacora/data/local_db.dart';
 import 'package:app_bitacora/data/repositories/cat_repo.dart';
 import 'package:app_bitacora/data/repositories/user_repo.dart';
-import 'package:app_bitacora/models/app_user.dart';
 import 'package:app_bitacora/models/area.dart';
 import 'package:app_bitacora/models/equipo.dart';
 import 'package:app_bitacora/models/equipo_elemento.dart';
@@ -1138,21 +1137,21 @@ class SeedService {
     }
 
     // Usuarios
-    final countUser = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM user')
-    ) ?? 0;
+    // final countUser = Sqflite.firstIntValue(
+    //   await db.rawQuery('SELECT COUNT(*) FROM user')
+    // ) ?? 0;
 
-    if( countUser == 0){
-      final users = [
-        AppUser(username: 'Operador 1', role: 'Operador', pass: '1234'),
-        AppUser(username: 'Operador 2', role: 'Operador', pass: '5678'),
-        AppUser(username: 'Operador 3', role: 'Operador', pass: '9874'),
-        AppUser(username: 'Admin', role: 'Admin', pass: '2509')
-      ];
+    // if( countUser == 0){
+    //   final users = [
+    //     AppUser(username: 'Operador 1', role: 'Operador', pass: '1234'),
+    //     AppUser(username: 'Operador 2', role: 'Operador', pass: '5678'),
+    //     AppUser(username: 'Operador 3', role: 'Operador', pass: '9874'),
+    //     AppUser(username: 'Admin', role: 'Admin', pass: '2509')
+    //   ];
 
-      for(final u in users){
-        await userRepo.insertUser(u);
-      }
-    }
+    //   for(final u in users){
+    //     await userRepo.insertUser(u);
+    //   }
+    // }
   }
 }

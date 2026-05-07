@@ -20,6 +20,6 @@ class UserRepo {
       );
 
     if(rows.isEmpty) return null;
-    return AppUser.fromMap(rows.first);
+    return AppUser.fromJson(rows.first);
   }
 }

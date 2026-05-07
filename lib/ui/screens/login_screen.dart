@@ -1,6 +1,6 @@
-import 'package:app_bitacora/data/controller/user_controller.dart';
 import 'package:app_bitacora/models/app_user.dart';
 import 'package:app_bitacora/provider/user_provider.dart';
+import 'package:app_bitacora/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,36 +14,39 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
-  final UserController controller = UserController();
   final _formKey = GlobalKey<FormState>();
-  String _username = '';
+  String _email = '';
   String _password = '';
   bool _obscurePassword = true;
+  bool _loading = false;
 
-  void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
 
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      AppUser? user = await controller.obtenerUsuario(_username, _password);
-      
-      if(!mounted) return;
+    setState(() => _loading = true);
 
-      if(user != null){
-                
-        userProvider.loginUser(_username, user.role, _password);
-        
-        Navigator.pushReplacement(
+    AppUser? user;
+    String errorMsg = 'Usuario o contraseña incorrectos.';
+    try {
+      user = await AuthService.instance.login(_email, _password);
+    } catch (e) {
+      errorMsg = 'No se pudo conectar al servidor.';
+    }
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (user != null) {
+      Provider.of<UserProvider>(context, listen: false).loginUser(user);
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const BitacorasListScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const BitacorasListScreen()),
       );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario o contraseña incorrectos.',), backgroundColor: Colors.red,),
-        );
-      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -56,27 +59,20 @@ class LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo o icono superior
               CircleAvatar(
                 radius: 48,
                 backgroundColor: Colors.deepPurple[100],
-                child: const Icon(
-                  Icons.lock_outline,
-                  size: 48,
-                  color: Colors.deepPurple,
-                ),
+                child: const Icon(Icons.lock_outline,
+                    size: 48, color: Colors.deepPurple),
               ),
               const SizedBox(height: 24),
               Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
+                    borderRadius: BorderRadius.circular(24)),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 36,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -92,9 +88,11 @@ class LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 28),
                         TextFormField(
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: 'Usuario',
-                            prefixIcon: const Icon(Icons.person, color: Colors.deepPurple),
+                            labelText: 'Correo electrónico',
+                            prefixIcon: const Icon(Icons.email,
+                                color: Colors.deepPurple),
                             filled: true,
                             fillColor: Colors.deepPurple[50],
                             border: OutlineInputBorder(
@@ -102,15 +100,17 @@ class LoginScreenState extends State<LoginScreen> {
                               borderSide: BorderSide.none,
                             ),
                           ),
-                          validator: (value) =>
-                              value == null || value.isEmpty ? 'Ingresa el usuario' : null,
-                          onSaved: (value) => _username = value ?? '',
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Ingresa el correo'
+                              : null,
+                          onSaved: (v) => _email = v?.trim() ?? '',
                         ),
                         const SizedBox(height: 18),
                         TextFormField(
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
-                            prefixIcon: const Icon(Icons.lock, color: Colors.deepPurple),
+                            prefixIcon: const Icon(Icons.lock,
+                                color: Colors.deepPurple),
                             filled: true,
                             fillColor: Colors.deepPurple[50],
                             border: OutlineInputBorder(
@@ -124,18 +124,15 @@ class LoginScreenState extends State<LoginScreen> {
                                     : Icons.visibility_off,
                                 color: Colors.deepPurple,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
                             ),
                           ),
                           obscureText: _obscurePassword,
-                          validator: (value) => value == null || value.isEmpty
+                          validator: (v) => v == null || v.isEmpty
                               ? 'Ingresa la contraseña'
                               : null,
-                          onSaved: (value) => _password = value ?? '',
+                          onSaved: (v) => _password = v ?? '',
                         ),
                         const SizedBox(height: 32),
                         SizedBox(
@@ -149,11 +146,21 @@ class LoginScreenState extends State<LoginScreen> {
                               ),
                               elevation: 6,
                             ),
-                            onPressed: _submit,
-                            child: const Text(
-                              'Ingresar',
-                              style: TextStyle(fontSize: 16, color: Colors.white),
-                            ),
+                            onPressed: _loading ? null : _submit,
+                            child: _loading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Ingresar',
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.white),
+                                  ),
                           ),
                         ),
                       ],
@@ -162,10 +169,8 @@ class LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                '© Maxival - V.2.4',
-                style: TextStyle(color: Colors.grey[600]),
-              )
+              Text('© Maxival - V.3.0',
+                  style: TextStyle(color: Colors.grey[600])),
             ],
           ),
         ),
