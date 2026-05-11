@@ -112,6 +112,7 @@ class CatalogRepo {
  
 }
 
+
 Future<Bitacora?> getEquipoRelacion(int equipoId, DateTime fecha, String itemId) async {
   final List<Map<String, dynamic>> rows = await db.rawQuery(
     '''

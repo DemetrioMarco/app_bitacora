@@ -1,5 +1,5 @@
 import 'package:app_bitacora/provider/user_provider.dart';
-import 'package:app_bitacora/services/seed_service.dart';
+// import 'package:app_bitacora/services/seed_service.dart';
 import 'package:app_bitacora/ui/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

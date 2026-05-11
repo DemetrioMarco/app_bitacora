@@ -12,6 +12,7 @@ import 'package:app_bitacora/models/equipo_api.dart';
 import 'package:app_bitacora/models/equipo_elemento.dart';
 import 'package:app_bitacora/services/auth_service.dart';
 import 'package:app_bitacora/services/board_config_service.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -34,11 +35,12 @@ class TaskService {
   BitacoraAPIController get _bitacoraController => BitacoraAPIController();
   EquipoAPIController get _equipoController => EquipoAPIController();
   ElementoController get _elementoController => ElementoController();
-  EquipoElementoController get _relacionController => EquipoElementoController();
-  
-  static const String _baseUrl = '${Env.apiBaseUrl}${Env.tareasPath}';
-  static const Duration _queryTimeout = Duration(seconds: 30);
+  EquipoElementoController get _relacionController =>
+      EquipoElementoController();
 
+  static const String _baseUrl = '${Env.apiBaseUrl}${Env.tareasPath}';
+  static const String _evidencia = '${Env.apiBaseUrl}${Env.evidenciaPath}';
+  static const Duration _queryTimeout = Duration(seconds: 30);
 
   Future<Map<String, String>> _buildHeaders() async {
     final token = await AuthService.instance.getAccessToken();
@@ -96,8 +98,9 @@ class TaskService {
       final decoded = jsonDecode(response.body) as Map<String, dynamic>;
 
       // Guardar boardId
+      int? boardId;
       if (decoded.containsKey('boardId') && decoded['boardId'] != null) {
-        final int boardId = decoded['boardId'] as int;
+        boardId = decoded['boardId'] as int;
         await BoardConfigService.instance.saveBoardId(boardId);
         if (kDebugMode) print('BoardId guardado: $boardId');
       }
@@ -105,7 +108,7 @@ class TaskService {
       // Guardar bitácoras localmente desde las tareas
       await _saveBitacorasFromTareas(decoded);
 
-      // Guardar equipos localmente  
+      // Guardar equipos localmente
       await _saveEquiposFromResponse(decoded);
 
       // Guardar elementos localmente
@@ -113,6 +116,11 @@ class TaskService {
 
       // Guardar relaciones localmente
       await _saveRelacionesFromResponse(decoded);
+
+      // Confirmación al servidor
+      if (boardId != null && decoded['tareas'] != null) {
+        await _confirmarTareas(boardId, decoded['tareas'] as List<dynamic>);
+      }
 
       return decoded;
     } on TimeoutException {
@@ -132,8 +140,6 @@ class TaskService {
   }
 
   Future<void> _saveBitacorasFromTareas(Map<String, dynamic> decoded) async {
-    
-
     final tareas = decoded['tareas'] as List<dynamic>? ?? [];
     if (kDebugMode) print('*********** Tareas filtradas: =====>  $tareas\n');
 
@@ -158,7 +164,8 @@ class TaskService {
       }
 
       if (itemsExistentes.contains(itemMonday)) {
-        if (kDebugMode) print('Bitácora ya existe para itemMonday: $itemMonday');
+        if (kDebugMode)
+          print('Bitácora ya existe para itemMonday: $itemMonday');
         continue;
       }
 
@@ -169,7 +176,8 @@ class TaskService {
       );
 
       await _bitacoraController.saveBitacoraLocal(bitacora);
-      if (kDebugMode) print('Bitácora guardada: itemMonday=$itemMonday, equipoId=$equipoId');
+      if (kDebugMode)
+        print('Bitácora guardada: itemMonday=$itemMonday, equipoId=$equipoId');
     }
   }
 
@@ -182,7 +190,7 @@ class TaskService {
     // Traer equipos ya guardados para evitar duplicados por ID
     final existentes = await _equipoController.getAllEquiposLocal();
     final idsExistentes = existentes.map((e) => e.id).toSet();
-    
+
     if (kDebugMode) print('IDs de equipos guardados: $idsExistentes');
 
     for (final equipoData in equipos) {
@@ -203,13 +211,15 @@ class TaskService {
       final equipo = EquipoAPI.fromMap(map);
 
       await _equipoController.saveEquipoLocal(equipo);
-      if (kDebugMode) print('Equipo guardado: ID=$equipoId, nombre=${equipo.nombre}');
+      if (kDebugMode)
+        print('Equipo guardado: ID=$equipoId, nombre=${equipo.nombre}');
     }
   }
 
   Future<void> _saveElementosFromResponse(Map<String, dynamic> decoded) async {
     final elementosJson = decoded['elementos'] as List<dynamic>? ?? [];
-    if (kDebugMode) print('*********** Elementos recibidos: =====>  $elementosJson\n');
+    if (kDebugMode)
+      print('*********** Elementos recibidos: =====>  $elementosJson\n');
 
     if (elementosJson.isEmpty) return;
 
@@ -230,26 +240,29 @@ class TaskService {
 
       final elemento = Elemento.fromMap(map);
       await _elementoController.saveElementoLocal(elemento);
-      
-      if (kDebugMode) print('Elemento guardado: ID=$id, nombre=${elemento.nombre}');
+
+      if (kDebugMode)
+        print('Elemento guardado: ID=$id, nombre=${elemento.nombre}');
     }
   }
 
-    Future<void> _saveRelacionesFromResponse(Map<String, dynamic> decoded) async {
+  Future<void> _saveRelacionesFromResponse(Map<String, dynamic> decoded) async {
     final relacionesJson = decoded['relaciones'] as List<dynamic>? ?? [];
-    if (kDebugMode) print('*********** Relaciones recibidas: =====>  $relacionesJson\n');
+    if (kDebugMode)
+      print('*********** Relaciones recibidas: =====>  $relacionesJson\n');
 
     if (relacionesJson.isEmpty) return;
 
     // Obtener relaciones actuales para evitar duplicados del par (equipo_id, elemento_id)
     final existentes = await _relacionController.getAllRelacionesLocal();
-    
+
     // Creamos un Set de strings con formato "equipoId-elementoId"
-    final paresExistentes = existentes.map((r) => '${r.equipoId}-${r.elementoId}').toSet();
+    final paresExistentes =
+        existentes.map((r) => '${r.equipoId}-${r.elementoId}').toSet();
 
     for (final data in relacionesJson) {
       final map = data as Map<String, dynamic>;
-      
+
       // Mapeo manual porque el JSON usa camelCase (equipoId) y el modelo snake_case (equipo_id)
       final int? eId = int.tryParse(map['equipoId'].toString());
       final int? elId = int.tryParse(map['elementoId'].toString());
@@ -259,7 +272,8 @@ class TaskService {
 
       // Verificar si el par ya existe
       if (paresExistentes.contains('$eId-$elId')) {
-        if (kDebugMode) print('Relación ya existe: Equipo $eId - Elemento $elId');
+        if (kDebugMode)
+          print('Relación ya existe: Equipo $eId - Elemento $elId');
         continue;
       }
 
@@ -270,9 +284,109 @@ class TaskService {
       );
 
       await _relacionController.saveRelacionLocal(relacion);
-      if (kDebugMode) print('Relación guardada: Equipo $eId <-> Elemento $elId');
+      if (kDebugMode)
+        print('Relación guardada: Equipo $eId <-> Elemento $elId');
     }
   }
 
+  Future<void> _confirmarTareas(int boardId, List<dynamic> tareas) async {
+    if (tareas.isEmpty) return;
 
+    final url =
+        Uri.parse('${Env.apiBaseUrl}${Env.tareasPath}/tareas/confirmar');
+
+    // Extraemos y convertimos los IDs a int, ya que el JSON los trae como String
+    final List<int> itemIds = tareas
+        .map((t) => int.tryParse(t['id'].toString()))
+        .whereType<int>() // Filtra nulos si el parseo falla
+        .toList();
+
+    final body = jsonEncode({
+      "boardId": boardId.toString(), // Lo mandamos como String según tu ejemplo
+      "itemIds": itemIds,
+    });
+
+    final client = http.Client();
+    try {
+      if (kDebugMode)print('Enviando confirmación a: $url con ${itemIds.length} tareas');
+
+      var response = await client
+          .post(url, headers: await _buildHeaders(), body: body)
+          .timeout(_queryTimeout);
+
+      // Manejo de refresh token (igual que en tu _authorizedGet)
+      if (response.statusCode == 401) {
+        final newToken = await AuthService.instance.refresh();
+        if (newToken != null) {
+          response = await client
+              .post(url, headers: await _buildHeaders(), body: body)
+              .timeout(_queryTimeout);
+        }
+      }
+
+      _checkResponse(response);
+
+      if (kDebugMode) {
+        print('Confirmación procesada por el servidor: ${response.body}');
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<void> uploadTareaArchivos({
+    required int itemId,
+    required String pdfPath,
+    required String photoPath,
+  }) async {
+    final url = Uri.parse('$_evidencia/upload/$itemId');
+
+    // Definimos una función interna para crear la petición, ya que si el token expira (401)
+    // debemos recrear el MultipartRequest desde cero (no se puede reutilizar el stream).
+    Future<http.MultipartRequest> createRequest() async {
+      final request = http.MultipartRequest('POST', url);
+
+      // Obtenemos los headers de auth (usamos los existentes del servicio)
+      final headers = await _buildHeaders();
+      // Quitamos Content-Type manual porque MultipartRequest lo genera automáticamente con el boundary
+      headers.remove('Content-Type');
+      request.headers.addAll(headers);
+
+      // Adjuntamos los archivos
+      request.files.add(await http.MultipartFile.fromPath('pdf', pdfPath));
+      request.files.add(await http.MultipartFile.fromPath('photo', photoPath));
+
+      return request;
+    }
+
+    try {
+      if (kDebugMode) print('Subiendo archivos para la tarea $itemId...');
+
+      var request = await createRequest();
+      var streamedResponse =
+          await request.send().timeout(const Duration(minutes: 2));
+      var response = await http.Response.fromStream(streamedResponse);
+
+      // Manejo de Refresh Token (401)
+      if (response.statusCode == 401) {
+        final newToken = await AuthService.instance.refresh();
+        if (newToken != null) {
+          if (kDebugMode) print('Token refrescado, reintentando subida...');
+          request = await createRequest();
+          streamedResponse =
+              await request.send().timeout(const Duration(minutes: 2));
+          response = await http.Response.fromStream(streamedResponse);
+        }
+      }
+
+      _checkResponse(response);
+
+      if (kDebugMode) {
+        print('Archivos subidos exitosamente: ${response.body}');
+      }
+    } on Exception catch (e) {
+      if (kDebugMode) print('Error en uploadTareaArchivos: $e');
+      throw TaskServiceException('Error al subir archivos de la tarea: $e');
+    }
+  }
 }

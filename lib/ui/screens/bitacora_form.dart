@@ -1,3 +1,5 @@
+import 'package:app_bitacora/data/controller/bitacora_api_controller.dart';
+import 'package:app_bitacora/models/bitacora_api.dart';
 import 'package:app_bitacora/provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,7 @@ import 'widgets/observacion_dialog.dart';
 import 'screens.dart';
 
 class BitacoraFormScreen extends StatefulWidget {
-  final Bitacora bitacora;
+  final BitacoraAPI bitacora;
 
   const BitacoraFormScreen({super.key, required this.bitacora});
 
@@ -46,20 +48,19 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
   List<CheckItem> _checklist = [];
   final CatalogController catalogController = CatalogController();
-  final BitacoraController bitacoraController = BitacoraController();
+  final BitacoraAPIController bitacoraController = BitacoraAPIController();
 
   @override
   void initState() {
     super.initState();
     _fecha = widget.bitacora.fecha;
-    _area = widget.bitacora.area;
-    _equipo = widget.bitacora.equipo;
+    _area = widget.bitacora.area!;
+    _equipo = widget.bitacora.nombreEquipo!;
     _equipoId = widget.bitacora.equipoId;
-    _tipoLimpieza = widget.bitacora.tipoLimpieza;
-    _frecuencia = widget.bitacora.frecuencia;
-    _linea = widget.bitacora.linea;
+    _tipoLimpieza = widget.bitacora.tipoLimpieza!;
+    _frecuencia = widget.bitacora.frecuencia!;
+    _linea = widget.bitacora.subarea!;
 
-    // _ejecutaCtrl.text = '';
     _verificaCtrl.text = '';
 
     _loadChecklist();
@@ -68,18 +69,16 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadSignatures());
   }
 
-
   Future<void> _takePhoto() async {
     try {
       final XFile? picked = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-        preferredCameraDevice: CameraDevice.rear
-      );
+          source: ImageSource.camera,
+          imageQuality: 80,
+          preferredCameraDevice: CameraDevice.rear);
 
-      if(!mounted) return;
+      if (!mounted) return;
 
-      if(picked == null){
+      if (picked == null) {
         // Usuario canceló la cámara
         return;
       }
@@ -92,13 +91,11 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Foto tomado correctametne'))
-      );
+          const SnackBar(content: Text('Foto tomado correctametne')));
     } catch (e, st) {
       debugPrint('Error al abrir cámara / tomar foto: $e\n$st');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al tomar la foto'))
-      );
+          const SnackBar(content: Text('Error al tomar la foto')));
     }
   }
 
@@ -116,13 +113,12 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       String? firmaEjecuto;
       String? verifico;
       String? firmaVerifico;
-    //  String? firmaLibera;
+      //  String? firmaLibera;
 
       if (result is Map<String, dynamic>) {
-       
         firmaEjecuto = result['firma_ejecuto'] as String?;
         firmaVerifico = result['firma_verifico'] as String?;
-    //    firmaLibera = result['firma_libero'] as String?;
+        //    firmaLibera = result['firma_libero'] as String?;
         ejecuto = result['ejecuto'] as String?;
         verifico = result['verifico'] as String?;
       } else {
@@ -131,7 +127,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
         firmaEjecuto = result.firmaEjecuto as String?;
         verifico = result.verifico as String?;
         firmaVerifico = result.firmaVerifico as String?;
-    //    firmaLibera = result.firmaLibero as String?;
+        //    firmaLibera = result.firmaLibero as String?;
       }
 
       setState(() {
@@ -154,35 +150,32 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   }
 
   void _loadChecklist() async {
-    
     final List<ChecklistItem> result = await bitacoraController.obtenerChecklistItem(widget.bitacora.id!);
 
-    if(result.isNotEmpty ){
- 
-      final items = result.map((item)=> CheckItem(
-        id: item.id!, 
-        title: item.titulo, 
-        observacion: item.observacion,
-        checked: item.checked,
-        orden: item.orden!
-        )).toList();
+    if (kDebugMode) print('*********** _loadChecklist: =====> ${widget.bitacora.id!}  $result\n');
+
+    if (result.isNotEmpty) {
+      final items = result.map((item) => CheckItem(
+              id: item.id!,
+              title: item.titulo,
+              observacion: item.observacion,
+              checked: item.checked,
+              orden: item.orden!))
+          .toList();
 
       setState(() {
-          _checklist = items;
-          _isReadOnly = true;
-        });
+        _checklist = items;
+        _isReadOnly = true;
+      });
 
-
-    }else{
-    final items =
-        await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
-
-        setState(() {
-          _checklist = items;
-          _isReadOnly = false;
-        });
+    } else {
+     // final items = await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
+      final items = await bitacoraController.obtenerCheckItemTemplate(widget.bitacora.equipoId);
+      setState(() {
+        _checklist = items;
+        _isReadOnly = false;
+      });
     }
-
   }
 
   Future<void> _openObservacion(CheckItem item) async {
@@ -225,33 +218,32 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       final bitProvider = Provider.of<BitacoraProvider>(context, listen: false);
       await bitProvider.cargarBitacoras();
     } catch (e, st) {
-      if(kDebugMode) debugPrint('Error actualizando provider tras firma: $e\n$st');
+      if (kDebugMode)
+        debugPrint('Error actualizando provider tras firma: $e\n$st');
     }
 
-
-    if(!mounted) return;
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Firma de $nombre guardada')),
     );
   }
 
   void _onSave() async {
-
     if (_isReadOnly) return;
 
     if (!_formKey.currentState!.validate()) return;
 
-    final updated = Bitacora(
+    final updated = BitacoraAPI(
       id: widget.bitacora.id,
       fecha: _fecha,
-      area: _area,
-      equipo: _equipo,
+      //area: _area,
+      //equipo: _equipo,
       equipoId: _equipoId,
-      tipoLimpieza: _tipoLimpieza,
-      frecuencia: _frecuencia,
-      linea: _linea,
+      // tipoLimpieza: _tipoLimpieza,
+      // frecuencia: _frecuencia,
+      // linea: _linea,
       itemMonday: widget.bitacora.itemMonday,
-      foto: _photoPath
+      // foto: _photoPath
     );
 
     final List<ChecklistItem> cli = _checklist.map((item) {
@@ -264,8 +256,9 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
           orden: item.orden);
     }).toList();
 
-    await catalogController.guardarChecklist(cli);
-    await bitacoraController.actualizarBitacora(updated);
+    //await catalogController.guardarChecklist(cli);
+    await bitacoraController.guardarChecklist(cli);
+    // await bitacoraController.actualizarBitacora(updated);
 
     if (!mounted) return;
 
@@ -296,7 +289,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
   @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('dd/MM/yy').format(_fecha);
-    
 
     return Scaffold(
       appBar: AppBar(
@@ -359,44 +351,43 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
                 return ChecklistItemWidget(
                   item: item,
                   onChanged: _isReadOnly
-                  ? null
-                  : (checked) {
-                    setState(() => item.checked = checked);
-                  },
-                  onEditObservacion: _isReadOnly
-                  ? null
-                  : () => _openObservacion(item),
+                      ? null
+                      : (checked) {
+                          setState(() => item.checked = checked);
+                        },
+                  onEditObservacion:
+                      _isReadOnly ? null : () => _openObservacion(item),
                 );
               }).toList(),
               const Divider(),
 
               // EJECUTÓ
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _ejecutaCtrl,
-                        decoration: const InputDecoration(labelText: 'EJECUTÓ'),
-                      ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _ejecutaCtrl,
+                      decoration: const InputDecoration(labelText: 'EJECUTÓ'),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      color: _ejecutaFirmado ? Colors.green : Colors.grey,
-                      onPressed: () {
-                        _openSignatureWithName(
-                          nombre: _ejecutaCtrl.text, 
-                          rol: 'EJECUTO',
-                          onSigned: (base64) {
-                            _firmaEjecutoBase64 = base64;
-                            _ejecutaFirmado = _firmaEjecutoBase64 != null &&
-                                _firmaEjecutoBase64!.isNotEmpty;
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    color: _ejecutaFirmado ? Colors.green : Colors.grey,
+                    onPressed: () {
+                      _openSignatureWithName(
+                        nombre: _ejecutaCtrl.text,
+                        rol: 'EJECUTO',
+                        onSigned: (base64) {
+                          _firmaEjecutoBase64 = base64;
+                          _ejecutaFirmado = _firmaEjecutoBase64 != null &&
+                              _firmaEjecutoBase64!.isNotEmpty;
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
 
               // VERIFICÓ
               Row(
@@ -430,25 +421,24 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
               Row(
                 children: [
                   ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(), 
-                    child: const Text('Cancelar')
-                  ),
-                 const Spacer(),
-                 SizedBox(
-                  width: 56,
-                  height: 48,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar')),
+                  const Spacer(),
+                  SizedBox(
+                    width: 56,
+                    height: 48,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: _takePhoto,
+                      child: Icon(Icons.camera_alt,
+                          color:
+                              _photoTaken ? Colors.greenAccent : Colors.blue),
                     ),
-                    onPressed: _takePhoto,
-                    child: Icon(Icons.camera_alt,
-                      color: _photoTaken ? Colors.greenAccent : Colors.blue
-                    ),
                   ),
-                  ),            
                   const Spacer(),
                   ElevatedButton(
                     onPressed: _isReadOnly ? null : _onSave,

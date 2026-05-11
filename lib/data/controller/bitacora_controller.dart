@@ -1,3 +1,6 @@
+import 'package:app_bitacora/data/repositories/bitacora_api_repo.dart';
+import 'package:app_bitacora/models/bitacora_api.dart';
+
 import '../../models/model.dart';
 import '../repositories/bitacora_repo.dart';
 import '../local_db.dart';
@@ -74,9 +77,9 @@ class BitacoraController {
     }
   }
 
-  Future<int> actualizarBitacora(Bitacora bitacora) async {
+  Future<int> actualizarBitacora(BitacoraAPI bitacora) async {
     final db = await LocalDB.instance.db;
-    final repo = BitacoraRepo(db);
+    final repo = BitacoraAPIRepo(db);
     return await repo.update(bitacora);
   }
 

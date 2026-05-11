@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:app_bitacora/models/bitacora_api.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
@@ -10,7 +11,7 @@ import 'package:pdf/pdf.dart';
 import '../models/model.dart';
 
 Future<File?> generarPdfBitacora(
-    Bitacora bitacora, List<ChecklistItem> checklist, Firma firma) async {
+    BitacoraAPI bitacora, List<ChecklistItem> checklist, Firma firma) async {
   if (kIsWeb) {
     return null;
   }
@@ -59,7 +60,7 @@ pdf.addPage(
                 pw.Text('Equipo:',
                     style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 4),
-                pw.Text(bitacora.equipo, style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(bitacora.nombreEquipo!, style: const pw.TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -74,7 +75,7 @@ pdf.addPage(
                 pw.Text('Área:',
                     style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 4),
-                pw.Text(bitacora.area, style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(bitacora.area!, style: const pw.TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -87,7 +88,7 @@ pdf.addPage(
                 pw.Text('Sub-área / Línea:',
                     style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 4),
-                pw.Text(bitacora.linea, style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(bitacora.subarea!, style: const pw.TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -98,7 +99,7 @@ pdf.addPage(
                 pw.Text('Tipo de Limpieza:',
                     style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 4),
-                pw.Text(bitacora.tipoLimpieza, style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(bitacora.tipoLimpieza!, style: const pw.TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -109,7 +110,7 @@ pdf.addPage(
                 pw.Text('Frecuencia:',
                     style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 4),
-                pw.Text(bitacora.frecuencia, style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(bitacora.frecuencia!, style: const pw.TextStyle(fontSize: 12)),
               ],
             ),
           ),

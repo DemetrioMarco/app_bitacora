@@ -6,6 +6,14 @@ class BitacoraAPI {
   String? pdf; 
   String? photo; 
 
+  // Campos de apoyo (no se guardan en la tabla bitacora, se traen del equipo)
+  String? nombreEquipo;
+  String? area;
+  String? subarea;
+  String? frecuencia;
+  String? tipo;
+  String? tipoLimpieza;
+
   BitacoraAPI({
     this.id,
     required this.equipoId,

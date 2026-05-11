@@ -1,10 +1,11 @@
+import 'package:app_bitacora/models/bitacora_api.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '/../models/bitacora.dart';
+
 
 class BitacoraItem extends StatelessWidget {
-  final Bitacora bitacora;
+  final BitacoraAPI bitacora;
   final VoidCallback? onTap;
   final VoidCallback? onShare;
   final VoidCallback? onEdit;
@@ -29,7 +30,8 @@ class BitacoraItem extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         title: Text(DateFormat('dd/MM/yy').format(bitacora.fecha)),
-        subtitle: Text('${bitacora.area} • ${bitacora.equipo}\n${bitacora.tipoLimpieza} • ${bitacora.frecuencia}'),
+        subtitle: Text('${bitacora.area} • ${bitacora.nombreEquipo}\n${bitacora.tipoLimpieza} • ${bitacora.frecuencia}'),
+        // subtitle: Text('Bitacora'),
         isThreeLine: true,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

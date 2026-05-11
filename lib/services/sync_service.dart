@@ -56,26 +56,28 @@ class SyncService {
     try {
       final respE = await api.get('/equipos');
       if (respE.statusCode == 200) {
-        final text = utf8.decode(respE.bodyBytes);
-        final list = jsonDecode(text) as List;
+        utf8.decode(respE.bodyBytes);
         // parse a tu modelo Equipo: Equipo.fromJson(...)
         // final equipos = list.map((e) => Equipo.fromJson(...)).toList();
         // await repo.upsertEquiposList(equipos);
       }
       await repo.setLocalVersion('equipo', '1', updatedAt: now);
-    } catch (e) {}
+    } catch (e) {
+      // log
+    }
 
     // 3) frecuencia
     try {
       final respF = await api.get('/frecuencias');
       if (respF.statusCode == 200) {
-        final text = utf8.decode(respF.bodyBytes);
-        final list = jsonDecode(text) as List;
+        utf8.decode(respF.bodyBytes);
         // parse y upsert
         // await repo.upsertFrecuenciaList(parsedList);
       }
       await repo.setLocalVersion('frecuencia', '1', updatedAt: now);
-    } catch (e) {}
+    } catch (e) {
+      //
+    }
 
     // 4) tipo_limpieza (ejemplo detallado porque pediste específicamente)
     try {
@@ -87,7 +89,9 @@ class SyncService {
         if (tipos.isNotEmpty) await repo.upsertTiposLimpiezaList(tipos);
       }
       await repo.setLocalVersion('tipo_limpieza', '1', updatedAt: now);
-    } catch (e) {}
+    } catch (e) {
+      //
+    }
 
     // fin seed
   }
@@ -141,16 +145,14 @@ class SyncService {
         case 'equipo':
           final respE = await api.get('/equipos');
           if (respE.statusCode == 200) {
-            final text = utf8.decode(respE.bodyBytes);
-            final list = jsonDecode(text) as List;
+            utf8.decode(respE.bodyBytes);
             // parse y upsert equipos
           }
           break;
         case 'frecuencia':
           final respF = await api.get('/frecuencias');
           if (respF.statusCode == 200) {
-            final text = utf8.decode(respF.bodyBytes);
-            final list = jsonDecode(text) as List;
+            utf8.decode(respF.bodyBytes);
             // parse y upsert frecuencias
           }
           break;
