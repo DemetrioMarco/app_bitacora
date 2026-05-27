@@ -12,6 +12,7 @@ import 'package:app_bitacora/models/equipo_api.dart';
 import 'package:app_bitacora/models/equipo_elemento.dart';
 import 'package:app_bitacora/services/auth_service.dart';
 import 'package:app_bitacora/services/board_config_service.dart';
+import 'package:app_bitacora/services/navigator_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -35,8 +36,7 @@ class TaskService {
   BitacoraAPIController get _bitacoraController => BitacoraAPIController();
   EquipoAPIController get _equipoController => EquipoAPIController();
   ElementoController get _elementoController => ElementoController();
-  EquipoElementoController get _relacionController =>
-      EquipoElementoController();
+  EquipoElementoController get _relacionController => EquipoElementoController();
 
   static const String _baseUrl = '${Env.apiBaseUrl}${Env.tareasPath}';
   static const String _evidencia = '${Env.apiBaseUrl}${Env.evidenciaPath}';
@@ -45,6 +45,8 @@ class TaskService {
   Future<Map<String, String>> _buildHeaders() async {
     final token = await AuthService.instance.getAccessToken();
     if (token == null || token.isEmpty) {
+      await AuthService.instance.logout();
+      NavigatorService.navigateToLogin();
       throw TaskServiceException('No hay token de autenticación disponible.');
     }
     return {
@@ -60,7 +62,9 @@ class TaskService {
           .get(uri, headers: await _buildHeaders())
           .timeout(_queryTimeout);
 
-      if (response.statusCode == 401) {
+      if (kDebugMode) print('****************** _authorizedGet Response: ${response.statusCode}');
+
+      if (response.statusCode == 403) {
         final newToken = await AuthService.instance.refresh();
         if (newToken == null) {
           throw TaskServiceException('Sesión expirada.', statusCode: 401);
@@ -155,29 +159,29 @@ class TaskService {
       final map = tarea as Map<String, dynamic>;
 
       final itemMonday = int.tryParse(map['id'].toString());
-      final equipoId = int.tryParse(map['equipo'].toString());
+      final name = map['name'] as String?;
+      final equipoId = int.tryParse(map['equipoId'].toString());
       final fechaStr = map['fecha'] as String?;
 
-      if (itemMonday == null || equipoId == null || fechaStr == null) {
+      if (itemMonday == null || name == null || equipoId == null || fechaStr == null) {
         if (kDebugMode) print('Tarea con datos inválidos, se omite: $map');
         continue;
       }
 
       if (itemsExistentes.contains(itemMonday)) {
-        if (kDebugMode)
-          print('Bitácora ya existe para itemMonday: $itemMonday');
+        if (kDebugMode) print('Bitácora ya existe para itemMonday: $itemMonday');
         continue;
       }
 
       final bitacora = BitacoraAPI(
+        nombre: name,
         equipoId: equipoId,
         itemMonday: itemMonday,
         fecha: DateTime.parse(fechaStr),
       );
 
       await _bitacoraController.saveBitacoraLocal(bitacora);
-      if (kDebugMode)
-        print('Bitácora guardada: itemMonday=$itemMonday, equipoId=$equipoId');
+      if (kDebugMode)print('Bitácora guardada: itemMonday=$itemMonday, equipoId=$equipoId');
     }
   }
 
@@ -211,15 +215,13 @@ class TaskService {
       final equipo = EquipoAPI.fromMap(map);
 
       await _equipoController.saveEquipoLocal(equipo);
-      if (kDebugMode)
-        print('Equipo guardado: ID=$equipoId, nombre=${equipo.nombre}');
+      if (kDebugMode)print('Equipo guardado: ID=$equipoId, nombre=${equipo.nombre}');
     }
   }
 
   Future<void> _saveElementosFromResponse(Map<String, dynamic> decoded) async {
     final elementosJson = decoded['elementos'] as List<dynamic>? ?? [];
-    if (kDebugMode)
-      print('*********** Elementos recibidos: =====>  $elementosJson\n');
+    if (kDebugMode)print('*********** Elementos recibidos: =====>  $elementosJson\n');
 
     if (elementosJson.isEmpty) return;
 
@@ -241,15 +243,13 @@ class TaskService {
       final elemento = Elemento.fromMap(map);
       await _elementoController.saveElementoLocal(elemento);
 
-      if (kDebugMode)
-        print('Elemento guardado: ID=$id, nombre=${elemento.nombre}');
+      if (kDebugMode)print('Elemento guardado: ID=$id, nombre=${elemento.nombre}');
     }
   }
 
   Future<void> _saveRelacionesFromResponse(Map<String, dynamic> decoded) async {
     final relacionesJson = decoded['relaciones'] as List<dynamic>? ?? [];
-    if (kDebugMode)
-      print('*********** Relaciones recibidas: =====>  $relacionesJson\n');
+    if (kDebugMode)print('*********** Relaciones recibidas: =====>  $relacionesJson\n');
 
     if (relacionesJson.isEmpty) return;
 
@@ -272,8 +272,7 @@ class TaskService {
 
       // Verificar si el par ya existe
       if (paresExistentes.contains('$eId-$elId')) {
-        if (kDebugMode)
-          print('Relación ya existe: Equipo $eId - Elemento $elId');
+        if (kDebugMode)print('Relación ya existe: Equipo $eId - Elemento $elId');
         continue;
       }
 
@@ -284,8 +283,7 @@ class TaskService {
       );
 
       await _relacionController.saveRelacionLocal(relacion);
-      if (kDebugMode)
-        print('Relación guardada: Equipo $eId <-> Elemento $elId');
+      if (kDebugMode)print('Relación guardada: Equipo $eId <-> Elemento $elId');
     }
   }
 
@@ -334,13 +332,13 @@ class TaskService {
     }
   }
 
-  Future<void> uploadTareaArchivos({
-    required int itemId,
+  Future<bool> uploadTareaArchivos({
+    required String itemId,
     required String pdfPath,
     required String photoPath,
   }) async {
     final url = Uri.parse('$_evidencia/upload/$itemId');
-
+    if (kDebugMode) print('URL de subidasbida... $url');
     // Definimos una función interna para crear la petición, ya que si el token expira (401)
     // debemos recrear el MultipartRequest desde cero (no se puede reutilizar el stream).
     Future<http.MultipartRequest> createRequest() async {
@@ -355,7 +353,9 @@ class TaskService {
       // Adjuntamos los archivos
       request.files.add(await http.MultipartFile.fromPath('pdf', pdfPath));
       request.files.add(await http.MultipartFile.fromPath('photo', photoPath));
+      //request.files.add(await http.MultipartFile.fromPath('photo', pdfPath));
 
+      if (kDebugMode) print('Request... $request');
       return request;
     }
 
@@ -373,20 +373,52 @@ class TaskService {
         if (newToken != null) {
           if (kDebugMode) print('Token refrescado, reintentando subida...');
           request = await createRequest();
-          streamedResponse =
-              await request.send().timeout(const Duration(minutes: 2));
+          streamedResponse = await request.send().timeout(const Duration(minutes: 2));
           response = await http.Response.fromStream(streamedResponse);
         }
       }
 
       _checkResponse(response);
-
       if (kDebugMode) {
         print('Archivos subidos exitosamente: ${response.body}');
       }
+      return true;
+
     } on Exception catch (e) {
       if (kDebugMode) print('Error en uploadTareaArchivos: $e');
       throw TaskServiceException('Error al subir archivos de la tarea: $e');
     }
   }
+
+  Future<bool> updateTaskStatus({
+  required String boardId,
+  required String itemId,
+  String status = 'Listo',
+}) async {
+  final url = Uri.parse('$_evidencia/updateTask/$boardId/$itemId/$status');
+
+  Future<http.Response> makeRequest() async {
+    final headers = await _buildHeaders();
+    return await http.put(url, headers: headers).timeout(const Duration(seconds: 30));
+  }
+
+  try {
+    var response = await makeRequest();
+
+    // Manejo de Refresh Token (401)
+    if (response.statusCode == 401) {
+      final newToken = await AuthService.instance.refresh();
+      if (newToken != null) {
+        response = await makeRequest();
+      }
+    }
+
+    _checkResponse(response);
+    return true;
+  } catch (e) {
+    if (kDebugMode) print('Error en updateTaskStatus: $e');
+    throw TaskServiceException('Error al actualizar estado de la tarea: $e');
+  }
+}
+
 }

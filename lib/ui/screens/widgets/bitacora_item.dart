@@ -30,7 +30,7 @@ class BitacoraItem extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         title: Text(DateFormat('dd/MM/yy').format(bitacora.fecha)),
-        subtitle: Text('${bitacora.area} • ${bitacora.nombreEquipo}\n${bitacora.tipoLimpieza} • ${bitacora.frecuencia}'),
+        subtitle: Text('${bitacora.nombre} • ${bitacora.area}  \n${bitacora.tipoLimpieza} • ${bitacora.frecuencia}'),
         // subtitle: Text('Bitacora'),
         isThreeLine: true,
         trailing: Row(

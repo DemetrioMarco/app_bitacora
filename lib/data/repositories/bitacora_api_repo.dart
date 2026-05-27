@@ -18,6 +18,7 @@ class BitacoraAPIRepo {
     final id = await db.insert(_table, map);
     return BitacoraAPI(
         id: id,
+        nombre: bitacora.nombre,
         equipoId: bitacora.equipoId,
         itemMonday: bitacora.itemMonday,
         fecha: bitacora.fecha);
@@ -152,6 +153,41 @@ if (kDebugMode) print('*********** getCheckItemAPI: =====>  $rows\n');
   Future<void> insertCheckList(ChecklistItem items) async {
     final map = Map<String, Object?>.from(items.toMap());
     await db.insert('checklist_items', map);
+  }
+
+  Future<int> validateSignature(int bitacoraId) async {
+    final result = await db.rawQuery(
+      '''
+        SELECT COUNT(*) AS total FROM signatures WHERE bitacora_id = ? AND firma_verifico <> '';
+      ''',
+      [bitacoraId],
+    );
+    return result.first['total'] as int;
+  }
+
+  // Eliminar Bitacora
+  Future<int> deleteBitacora( int bitacoraId) async {
+    return await db.delete(
+      'bitacorasAPI',
+      where: 'id = ?',
+      whereArgs: [bitacoraId]
+      );
+  }
+  
+  Future<int> deleteSignature(int bitacoraId) async {
+    return await db.delete(
+      'signatures', 
+      where: 'bitacora_id = ?', 
+      whereArgs: [bitacoraId]
+    );
+  }
+
+  Future<int> deleteChecklisItem(int bitacoraId) async {
+     return await db.delete(
+      'checklist_items',
+      where: 'bitacora_id = ?',
+      whereArgs: [bitacoraId]
+      );
   }
 
 }

@@ -24,14 +24,28 @@ class BitacoraAPIController {
   Future<List<BitacoraAPI>> getAllBitacorasLocal() async {
     final db = await LocalDB.instance.db;
     final repo = BitacoraAPIRepo(db);
-    return await repo.getAll();
-    
+    return await repo.getAll();   
   }
 
   Future<BitacoraAPI?> getBitacoraLocalById(int id) async {
     final db = await LocalDB.instance.db;
     final repo = BitacoraAPIRepo(db);
     return await repo.getById(id);
+  }
+
+  Future<bool> eliminarBitacora(int bitacoraId) async {
+    try {
+      final db = await LocalDB.instance.db;
+      final repo = BitacoraAPIRepo(db);
+      int deleteBitacora = await repo.deleteBitacora(bitacoraId);
+      int deleteSignature = await repo.deleteSignature(bitacoraId);
+      int deleteCheckList = await repo.deleteChecklisItem(bitacoraId);
+      final total = deleteBitacora + deleteSignature + deleteCheckList;
+
+      return total > 0;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<int> deleteBitacoraLocal(int id) async {
@@ -59,6 +73,13 @@ class BitacoraAPIController {
     return await repo.getSignatureByBitacoraId(bitacoraId);
   }
 
+  Future<bool> tieneSignature(int bitacoraId) async {
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraAPIRepo(db);
+    final count = await repo.validateSignature(bitacoraId);
+    return count > 0;
+  }
+
   Future<List<CheckItem>> obtenerCheckItemTemplate(int equipoId) async {
     if (kDebugMode) print('*********** obtenerCheckItemTemplate: =====>  $equipoId\n');
     final db = await LocalDB.instance.db;
@@ -73,5 +94,11 @@ class BitacoraAPIController {
     for(final item in items){
       await repo.insertCheckList(item);
     }
+  }
+
+  Future<int> actualizarBitacora(BitacoraAPI bitacora) async {
+    final db = await LocalDB.instance.db;
+    final repo = BitacoraAPIRepo(db);
+    return await repo.update(bitacora);
   }
 }

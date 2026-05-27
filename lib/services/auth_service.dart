@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:app_bitacora/constants/env.dart'; 
@@ -37,7 +38,8 @@ class AuthService {
       body: jsonEncode({'refresh_token': refreshToken}),
     );
 
-    if (res.statusCode != 200) {
+    if(kDebugMode) print('***************** Error: ${res.statusCode}');
+    if (res.statusCode == 401) {
       await logout();
       return null;
     }

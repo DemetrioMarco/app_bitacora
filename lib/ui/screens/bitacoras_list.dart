@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:app_bitacora/data/controller/bitacora_api_controller.dart';
 import 'package:app_bitacora/models/bitacora_api.dart';
+import 'package:app_bitacora/services/board_config_service.dart';
 import 'package:app_bitacora/services/task_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 
-import '/data/controller/controller.dart';
 import '/services/services.dart';
 import '/provider/provider.dart';
 import '/models/model.dart';
@@ -24,7 +24,6 @@ class BitacorasListScreen extends StatefulWidget {
 
 class _BitacorasListScreenState extends State<BitacorasListScreen> {
   final BitacoraAPIController bitacoraController = BitacoraAPIController();
-  final CatalogController catController = CatalogController();
 
   bool isLoading = false;
 
@@ -89,89 +88,11 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
     }
   }
 
-//   Future<void> _cargarItems() async {
-//   if (!mounted) return;
-
-//   setState(() => isLoading = true);
-
-//   final userProvider = Provider.of<UserProvider>(context, listen: false);
-//   final user = userProvider.user;
-
-//   if (user == null || user.username.isEmpty) {
-//     debugPrint('Usuario no disponible aún');
-//     if (mounted) setState(() => isLoading = false);
-//     return;
-//   }
-
-//   try {
-//     final items =
-//         await MondayService.instance.fetchItemsByTurnoAndOperador(
-//       turno: '1er Turno',
-//       operador: user.username,
-//     );
-
-//     for (final i in items) {
-//       final equipoIdStr = i['equipoId'];
-//       if (equipoIdStr == null || equipoIdStr.isEmpty) continue;
-
-//       final idEquipo = int.tryParse(equipoIdStr);
-//       if (idEquipo == null) continue;
-
-//       final dateStr = i['date'];
-//       if (dateStr == null || dateStr.isEmpty) continue;
-
-//       final fecha = DateTime.tryParse(dateStr);
-//       if (fecha == null) continue;
-
-//       final itemId = i['itemId'];
-//       if (itemId == null || itemId.isEmpty) continue;
-
-//       final newBitacora =
-//           await catController.crearBitacora(idEquipo, fecha, itemId);
-
-//       if (newBitacora == null) {
-//         debugPrint('No se pudo crear bitácora para item $itemId');
-//         continue;
-//       }
-
-//      bitacoraController.guardar(newBitacora);
-
-//       await MondayService.instance
-//           .changeItemStatus(itemId: itemId, status: 'Cargada');
-//     }
-
-//     await _loadBitacoras();
-
-//   } on MondayRateLimitException catch (e){
-//     if (!mounted) return;
-//     ScaffoldMessenger.of(context).showSnackBar(
-//     SnackBar(
-//       content: Text(e.message),
-//       backgroundColor: Colors.orange,
-//       duration: const Duration(seconds: 5),
-//     ),
-//   );
-//   } catch (e, stack) {
-//     debugPrint('ERROR _cargarItems: $e');
-//     debugPrintStack(stackTrace: stack);
-
-//     if (!mounted) return;
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text('Error al cargar datos: $e'),
-//         backgroundColor: Colors.redAccent,
-//       )
-//     );
-//   } finally {
-//     if (mounted) setState(() => isLoading = false);
-//   }
-// }
-
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<BitacoraProvider>(context);
     final List<BitacoraAPI> bitacoras = provider.bitacoras;
-    final BitacoraController bitacoraController = BitacoraController();
+    final BitacoraAPIController bitacoraController = BitacoraAPIController();
     final user = Provider.of<UserProvider>(context, listen: false).user;
 
     return Scaffold(
@@ -197,8 +118,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                       children: const [
                           SizedBox(height: 120),
                           Center(
-                              child: Text(
-                                  'No hay bitácoras. \nPresiona + \npara cargar una.')),
+                              child: Text('No hay bitácoras. \nPresiona + \npara cargar una.')),
                         ])
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),
@@ -329,8 +249,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                         }
 
                                         try {
-                                          final File? file =
-                                              await generarPdfBitacora(
+                                          final File? file = await generarPdfBitacora(
                                                   b, checklist, firma);
                                           if (file == null) {
                                             scaffold.showSnackBar(const SnackBar(
@@ -340,7 +259,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                           } else {
                                             b.pdf = file.path;
                                             await bitacoraController
-                                                .actualizarBitacora(b);
+                                                .updateBitacoraLocal(b);
                                           }
                                           scaffold.showSnackBar(
                                             const SnackBar(
@@ -414,7 +333,7 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                       } else {
                                         b.pdf = file.path;
                                         await bitacoraController
-                                            .actualizarBitacora(b);
+                                            .updateBitacoraLocal(b);
                                         await provider.cargarBitacoras();
                                       }
                                       scaffold.showSnackBar(
@@ -436,79 +355,81 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                   onSend: !canSend
                                       ? null
                                       : () async {
-                                          // final scaffold =
-                                          //     ScaffoldMessenger.of(context);
+                                          final scaffold = ScaffoldMessenger.of(context);
+                                          setState(() {
+                                            isLoading = true;
+                                          });
 
-                                          // setState(() {
-                                          //   isLoading = true;
-                                          // });
+                                          try {
+                                            // 1. Validar PDF
+                                            final String? fileToUpload = b.pdf;
+                                            if (fileToUpload == null || fileToUpload.isEmpty) {
+                                              throw Exception('No existe PDF generado para id=${b.id}');
+                                            }
 
-                                          // try {
-                                          //   final String? fileToUpload = b.pdf;
-                                          //   if (fileToUpload == null ||
-                                          //       fileToUpload.isEmpty) {
-                                          //     throw Exception(
-                                          //         'No existe PDF generado para id=${b.id}');
-                                          //   }
+                                            // 2. Validar Foto
+                                            final String? photoToUpload = b.photo;
+                                            if (photoToUpload == null || photoToUpload.trim().isEmpty) {
+                                              throw Exception('Es obligatorio tomar una foto de evidencia antes de enviar.');
+                                            }
 
-                                          //   final String? enviado =
-                                          //       await MondayService.instance
-                                          //           .cerrarTareaYAdjuntarPdf(
-                                          //               itemId: b.itemMonday,
-                                          //               updateBody:
-                                          //                   "Envio evidencia desde app",
-                                          //               fotoPath: b.foto ?? '',
-                                          //               pdfFile: fileToUpload,
-                                          //               nameFile:
-                                          //                   "bitacora_${b.id}");
+                                            // 3. Obtener BoardId desde el Store
+                                            final int? boardId = await BoardConfigService.instance.getBoardId();
+                                            if(boardId == null){
+                                              throw Exception('No se encontró el boardId Configurado. Cierre sesión y vuelva a entrar');
+                                            }
 
-                                          //   if (enviado!.isNotEmpty) {
-                                          //     final success =
-                                          //         await bitacoraController
-                                          //             .eliminarBitacora(b.id!);
+                                            final String itemIdStr = b.itemMonday.toString();
+                                            final String boardIdStr = boardId.toString();
 
-                                          //     if (success) {
-                                          //       scaffold.showSnackBar(
-                                          //           const SnackBar(
-                                          //               content: Text(
-                                          //                   'Reporte enviado a Monday'),
-                                          //               backgroundColor:
-                                          //                   Colors.green));
+                                            // 4. Subir archivos a nuestro backend
+                                            final bool successUpload = await TaskService.instance.uploadTareaArchivos(
+                                              itemId: itemIdStr, 
+                                              pdfPath: fileToUpload, 
+                                              photoPath: b.photo ?? '',
+                                            );
+                                            
 
-                                          //       await provider
-                                          //           .cargarBitacoras();
-                                          //     }
-                                          //   } else {
-                                          //     scaffold.showSnackBar(const SnackBar(
-                                          //         content: Text(
-                                          //             'Error al enviar a Monday'),
-                                          //         backgroundColor:
-                                          //             Colors.redAccent));
-                                          //   }
-                                          // } on MondayRateLimitException catch (e) {
-                                          //   scaffold.showSnackBar(
-                                          //     SnackBar(
-                                          //       content: Text(e.message),
-                                          //       backgroundColor: Colors.orange,
-                                          //       duration:
-                                          //           const Duration(seconds: 6),
-                                          //     ),
-                                          //   );
-                                          // } catch (e, st) {
-                                          //   if (kDebugMode) {
-                                          //     print(
-                                          //         'Error al enviar update: $e\n$st');
-                                          //   }
-                                          //   scaffold.showSnackBar(SnackBar(
-                                          //     content: Text(
-                                          //         'Error al enviar update: $e'),
-                                          //     backgroundColor: Colors.redAccent,
-                                          //   ));
-                                          // } finally {
-                                          //   setState(() {
-                                          //     isLoading = false;
-                                          //   });
-                                          // }
+                                            if (successUpload) {
+                                              // 5. Cambiar estatus a "Listo"
+                                              final bool successStatus = await TaskService.instance.updateTaskStatus(boardId: boardIdStr, itemId: itemIdStr);
+
+                                              if(successStatus){
+                                                // 6. Eliminamos registro local si "TODO" fue exitoso
+                                                final bool successDelete = await bitacoraController.eliminarBitacora(b.id!);
+
+                                                if(successDelete){
+                                                  scaffold.showSnackBar( const SnackBar(
+                                                          content: Text('Evidencia subida y tarea finalizada correctamente'),
+                                                          backgroundColor: Colors.green));
+
+                                                  await provider.cargarBitacoras();
+                                                  }
+                                              }
+
+                                            }
+                                          
+                                          } on TaskServiceException catch (e){
+                                             scaffold.showSnackBar(
+                                              SnackBar(
+                                                content: Text(e.message),
+                                                backgroundColor: Colors.orange,
+                                                duration: const Duration(seconds: 6),
+                                              ),
+                                            );
+                                          } catch (e, st) {
+                                            if (kDebugMode) print('Error al enviar update: $e\n$st');
+                                            scaffold.showSnackBar(
+                                              SnackBar(
+                                                content: Text('Error al enviar update: $e'),
+                                                backgroundColor: Colors.redAccent,
+                                              )
+                                            );
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
                                         },
                                 );
                               }

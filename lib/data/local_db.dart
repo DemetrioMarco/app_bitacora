@@ -20,10 +20,13 @@ class LocalDB {
   Future<Database> _init() async {
     final path = join(await getDatabasesPath(), _dbName);
 
-    if (kDebugMode) {
-      print('Path:\n$path');
-      deleteDatabase(path);
-      print('Elimando BD');
+  // Se ejecuta para borrar la BD: flutter run --dart-define=RESET_DATABASE=true
+  //  const bool resetDatabase = bool.fromEnvironment('RESET_DATABASE');
+const bool resetDatabase = true;
+    if (kDebugMode && resetDatabase) {
+      debugPrint('Path:\n$path');
+      await deleteDatabase(path);
+      debugPrint('Eliminando BD');
     }
 
     return openDatabase(path,
@@ -31,73 +34,74 @@ class LocalDB {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    const sql1 = '''
-      CREATE TABLE catalogos_version (
-        table_name TEXT PRIMARY KEY,
-        version TEXT NOT NULL,
-        updated_at TEXT
-      )
-    ''';
-    await db.execute(sql1);
+    // const sql1 = '''
+    //   CREATE TABLE catalogos_version (
+    //     table_name TEXT PRIMARY KEY,
+    //     version TEXT NOT NULL,
+    //     updated_at TEXT
+    //   )
+    // ''';
+    // await db.execute(sql1);
 
-    const sql2 = '''
-      CREATE TABLE areas (
-        id TEXT PRIMARY KEY,
-        nombre TEXT,
-        activo INTEGER,
-        fecha_creacion TEXT,
-        fecha_actualizacion TEXT
-      )
-    ''';
-    await db.execute(sql2);
+    // const sql2 = '''
+    //   CREATE TABLE areas (
+    //     id TEXT PRIMARY KEY,
+    //     nombre TEXT,
+    //     activo INTEGER,
+    //     fecha_creacion TEXT,
+    //     fecha_actualizacion TEXT
+    //   )
+    // ''';
+    // await db.execute(sql2);
 
-    const sqlSubArea = '''
-      CREATE TABLE sub_area (
-        id TEXT PRIMARY KEY,
-        nombre TEXT,
-        activo INTEGER,
-        fecha_creacion TEXT,
-        fecha_actualizacion TEXT
-      )
-    ''';
-    await db.execute(sqlSubArea);
+    // const sqlSubArea = '''
+    //   CREATE TABLE sub_area (
+    //     id TEXT PRIMARY KEY,
+    //     nombre TEXT,
+    //     activo INTEGER,
+    //     fecha_creacion TEXT,
+    //     fecha_actualizacion TEXT
+    //   )
+    // ''';
+    // await db.execute(sqlSubArea);
 
-    await db.execute('''
-    CREATE TABLE IF NOT EXISTS tipos_limpieza (
-      id INTEGER PRIMARY KEY,
-      nombre TEXT,
-      activo INTEGER,
-      fecha_creacion TEXT
-    )
-    ''');
+    // await db.execute('''
+    // CREATE TABLE IF NOT EXISTS tipos_limpieza (
+    //   id INTEGER PRIMARY KEY,
+    //   nombre TEXT,
+    //   activo INTEGER,
+    //   fecha_creacion TEXT
+    // )
+    // ''');
 
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS frecuencia(
-        id INTEGER PRIMARY KEY,
-        nombre TEXT
-      )
-    ''');
+    // await db.execute('''
+    //   CREATE TABLE IF NOT EXISTS frecuencia(
+    //     id INTEGER PRIMARY KEY,
+    //     nombre TEXT
+    //   )
+    // ''');
 
-    const sqlBitacora = '''
-      CREATE TABLE IF NOT EXISTS bitacoras (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        equipo_id INTEGER NOT NULL,
-        equipo TEXT NOT NULL,
-        fecha TEXT NOT NULL,
-        area TEXT NOT NULL,
-        linea TEXT NOT NULL,
-        tipo_limpieza TEXT NOT NULL,
-        frecuencia TEXT NOT NULL,
-        item_monday TEXT NOT NULL,
-        pdf TEXT,
-        foto TEXT
-      )
-    ''';
-    await db.execute(sqlBitacora);
+    // const sqlBitacora = '''
+    //   CREATE TABLE IF NOT EXISTS bitacoras (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     equipo_id INTEGER NOT NULL,
+    //     equipo TEXT NOT NULL,
+    //     fecha TEXT NOT NULL,
+    //     area TEXT NOT NULL,
+    //     linea TEXT NOT NULL,
+    //     tipo_limpieza TEXT NOT NULL,
+    //     frecuencia TEXT NOT NULL,
+    //     item_monday TEXT NOT NULL,
+    //     pdf TEXT,
+    //     foto TEXT
+    //   )
+    // ''';
+    // await db.execute(sqlBitacora);
 
     const sqlBitacoraAPI = '''
   CREATE TABLE IF NOT EXISTS bitacorasAPI (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
     equipo_id INTEGER NOT NULL,
     fecha TEXT NOT NULL,
     item_monday TEXT UNIQUE NOT NULL,
@@ -229,9 +233,7 @@ class LocalDB {
     if (kDebugMode) {
       print('onUpgrade oldV=$oldV newV=$newV');
     }
-    if (oldV < 2 && newV >= 2) {
-     
-    }
+    if (oldV < 2 && newV >= 2) {}
   }
 
   Future<void> close() async {

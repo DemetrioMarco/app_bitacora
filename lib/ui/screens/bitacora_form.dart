@@ -55,7 +55,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
     super.initState();
     _fecha = widget.bitacora.fecha;
     _area = widget.bitacora.area!;
-    _equipo = widget.bitacora.nombreEquipo!;
+    _equipo = widget.bitacora.nombre;
     _equipoId = widget.bitacora.equipoId;
     _tipoLimpieza = widget.bitacora.tipoLimpieza!;
     _frecuencia = widget.bitacora.frecuencia!;
@@ -169,7 +169,6 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       });
 
     } else {
-     // final items = await catalogController.obtenerCheckItem(widget.bitacora.equipoId);
       final items = await bitacoraController.obtenerCheckItemTemplate(widget.bitacora.equipoId);
       setState(() {
         _checklist = items;
@@ -218,8 +217,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
       final bitProvider = Provider.of<BitacoraProvider>(context, listen: false);
       await bitProvider.cargarBitacoras();
     } catch (e, st) {
-      if (kDebugMode)
-        debugPrint('Error actualizando provider tras firma: $e\n$st');
+      if (kDebugMode)debugPrint('Error actualizando provider tras firma: $e\n$st');
     }
 
     if (!mounted) return;
@@ -233,17 +231,23 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
+    // VALIDAR FOTO
+  if (_photoPath == null || _photoPath!.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Debes tomar una foto de evidencia antes de guardar'),
+      ),
+    );
+    return;
+  }
+
     final updated = BitacoraAPI(
       id: widget.bitacora.id,
+      nombre: widget.bitacora.nombre,
       fecha: _fecha,
-      //area: _area,
-      //equipo: _equipo,
       equipoId: _equipoId,
-      // tipoLimpieza: _tipoLimpieza,
-      // frecuencia: _frecuencia,
-      // linea: _linea,
       itemMonday: widget.bitacora.itemMonday,
-      // foto: _photoPath
+      photo: _photoPath
     );
 
     final List<ChecklistItem> cli = _checklist.map((item) {
@@ -258,7 +262,7 @@ class _BitacoraFormScreenState extends State<BitacoraFormScreen> {
 
     //await catalogController.guardarChecklist(cli);
     await bitacoraController.guardarChecklist(cli);
-    // await bitacoraController.actualizarBitacora(updated);
+    await bitacoraController.actualizarBitacora(updated);
 
     if (!mounted) return;
 
