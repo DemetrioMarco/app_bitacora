@@ -4,17 +4,26 @@ import 'package:flutter/material.dart';
 
 class UserProvider extends ChangeNotifier {
   AppUser? _user;
-  AppUser? get user => _user;
+  bool _isLoading = true; // Nueva variable de estado
 
-  // Constructor para inicializar el usuario al crear el provider
+  AppUser? get user => _user;
+  bool get isLoading => _isLoading;
+
   UserProvider() {
     _initializeUser();
   }
 
-  // Método privado para cargar el usuario desde el almacenamiento seguro
   Future<void> _initializeUser() async {
-    _user = await AuthService.instance.getCurrentUser();
-    notifyListeners();
+    try {
+      _user = await AuthService.instance.getCurrentUser();
+    } catch (e) {
+      debugPrint("Error inicializando usuario: $e");
+      await AuthService.instance.logout();
+      _user = null;
+    } finally {
+      _isLoading = false; 
+      notifyListeners();
+    }
   }
 
   Future<void> loginUser(AppUser user) async {

@@ -13,6 +13,7 @@ class AuthService {
   static const _kAccess = 'access_token';
   static const _kRefresh = 'refresh_token';
   static const _kUser = 'user_json';
+   static const _kExpiry = 'session_expiry';
 
   Future<AppUser?> login(String email, String password) async {
     final res = await http.post(
@@ -53,21 +54,37 @@ class AuthService {
     await _storage.write(key: _kAccess, value: data['access_token'] as String);
     await _storage.write(key: _kRefresh, value: data['refresh_token'] as String);
     await _storage.write(key: _kUser, value: jsonEncode(data['user']));
+
+    // Guardamos la fecha límite (Actual + 7 días del refresh token)
+    final expireDate = DateTime.now().add(const Duration(milliseconds: 1296000000));
+    await _storage.write(key: _kExpiry, value: expireDate.toIso8601String());
   }
 
   Future<String?> getAccessToken() => _storage.read(key: _kAccess);
 
   Future<AppUser?> getCurrentUser() async {
+    final expiryStr = await _storage.read(key: _kExpiry);
     final raw = await _storage.read(key: _kUser);
-    if (raw == null) return null;
+
+    if (raw == null || expiryStr == null) return null;
+
+    // Validación offline de los 15 días
+    final expiryDate = DateTime.parse(expiryStr);
+
+    if (DateTime.now().isAfter(expiryDate)) {
+      await logout(); // Expiró, limpiamos datos
+      return null;
+    }
+
     return AppUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  Future<bool> isLoggedIn() async => (await _storage.read(key: _kAccess)) != null;
+  Future<bool> isLoggedIn() async => (await getCurrentUser()) != null;
 
   Future<void> logout() async {
     await _storage.delete(key: _kAccess);
     await _storage.delete(key: _kRefresh);
     await _storage.delete(key: _kUser);
+    await _storage.delete(key: _kExpiry);
   }
 }

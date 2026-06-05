@@ -4,6 +4,7 @@ import 'package:app_bitacora/data/controller/bitacora_api_controller.dart';
 import 'package:app_bitacora/models/bitacora_api.dart';
 import 'package:app_bitacora/services/board_config_service.dart';
 import 'package:app_bitacora/services/task_service.dart';
+import 'package:app_bitacora/utils/network_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
@@ -48,6 +49,22 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
 
   Future<void> _cargarTareasApi() async {
     if (!mounted) return;
+
+    // 1. Verificar internet antes de intentar
+    bool connected = await NetworkInfo.hasConnection();
+
+    if (!mounted) return;
+
+    if (!connected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Sin conexión a internet. No se pueden descargar nuevas tareas.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     setState(() => isLoading = true);
 
@@ -100,8 +117,12 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
           title: Text('Programa de visitas ${user?.nombre}'),
           actions: [
             IconButton(
-                onPressed: () {
-                  Provider.of<UserProvider>(context, listen: false).logout();
+                onPressed: () async {
+                  await Provider.of<UserProvider>(context, listen: false)
+                      .logout();
+
+                  if (!context.mounted) return;
+
                   Navigator.pushReplacement(context,
                       MaterialPageRoute(builder: (_) => const LoginScreen()));
                 },
@@ -118,7 +139,8 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                       children: const [
                           SizedBox(height: 120),
                           Center(
-                              child: Text('No hay bitácoras. \nPresiona + \npara cargar una.')),
+                              child: Text(
+                                  'No hay bitácoras. \nPresiona + \npara cargar una.')),
                         ])
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),
@@ -249,7 +271,8 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                         }
 
                                         try {
-                                          final File? file = await generarPdfBitacora(
+                                          final File? file =
+                                              await generarPdfBitacora(
                                                   b, checklist, firma);
                                           if (file == null) {
                                             scaffold.showSnackBar(const SnackBar(
@@ -355,76 +378,95 @@ class _BitacorasListScreenState extends State<BitacorasListScreen> {
                                   onSend: !canSend
                                       ? null
                                       : () async {
-                                          final scaffold = ScaffoldMessenger.of(context);
-                                          setState(() {
-                                            isLoading = true;
-                                          });
+                                          final scaffold =
+                                              ScaffoldMessenger.of(context);
+
+                                          bool connected =
+                                              await NetworkInfo.hasConnection();
+
+                                              if (!mounted) return;
+
+                                          if (!connected) {
+                                            scaffold.showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Se requiere internet para enviar la bitácora terminada.'),
+                                                backgroundColor: Colors.orange,
+                                              ),
+                                            );
+                                            return;
+                                          }
+
+                                          setState(() => isLoading = true);
 
                                           try {
                                             // 1. Validar PDF
                                             final String? fileToUpload = b.pdf;
-                                            if (fileToUpload == null || fileToUpload.isEmpty) {
-                                              throw Exception('No existe PDF generado para id=${b.id}');
+                                            if (fileToUpload == null ||
+                                                fileToUpload.isEmpty) {
+                                              throw Exception(
+                                                  'No existe PDF generado para id=${b.id}');
                                             }
 
                                             // 2. Validar Foto
-                                            final String? photoToUpload = b.photo;
-                                            if (photoToUpload == null || photoToUpload.trim().isEmpty) {
-                                              throw Exception('Es obligatorio tomar una foto de evidencia antes de enviar.');
+                                            final String? photoToUpload =
+                                                b.photo;
+                                            if (photoToUpload == null ||
+                                                photoToUpload.trim().isEmpty) {
+                                              throw Exception(
+                                                  'Es obligatorio tomar una foto de evidencia antes de enviar.');
                                             }
 
                                             // 3. Obtener BoardId desde el Store
-                                            final int? boardId = await BoardConfigService.instance.getBoardId();
-                                            if(boardId == null){
-                                              throw Exception('No se encontró el boardId Configurado. Cierre sesión y vuelva a entrar');
+                                            final int? boardId =
+                                                await BoardConfigService
+                                                    .instance
+                                                    .getBoardId();
+                                            if (boardId == null) {
+                                              throw Exception(
+                                                  'No se encontró el boardId Configurado. Cierre sesión y vuelva a entrar');
                                             }
 
-                                            final String itemIdStr = b.itemMonday.toString();
-                                            final String boardIdStr = boardId.toString();
+                                            final String itemIdStr =
+                                                b.itemMonday.toString();
+                                            final String boardIdStr =
+                                                boardId.toString();
 
                                             // 4. Subir archivos a nuestro backend
-                                            final bool successUpload = await TaskService.instance.uploadTareaArchivos(
-                                              itemId: itemIdStr, 
-                                              pdfPath: fileToUpload, 
+                                            final bool successUpload =
+                                                await TaskService.instance
+                                                    .uploadTareaArchivos(
+                                              itemId: itemIdStr,
+                                              pdfPath: fileToUpload,
                                               photoPath: b.photo ?? '',
                                             );
-                                            
 
                                             if (successUpload) {
                                               // 5. Cambiar estatus a "Listo"
-                                              final bool successStatus = await TaskService.instance.updateTaskStatus(boardId: boardIdStr, itemId: itemIdStr);
-
-                                              if(successStatus){
-                                                // 6. Eliminamos registro local si "TODO" fue exitoso
-                                                final bool successDelete = await bitacoraController.eliminarBitacora(b.id!);
-
-                                                if(successDelete){
-                                                  scaffold.showSnackBar( const SnackBar(
-                                                          content: Text('Evidencia subida y tarea finalizada correctamente'),
+                                              await TaskService.instance.updateTaskStatus(boardId: boardIdStr,itemId: itemIdStr);
+                                              await bitacoraController.eliminarBitacora(b.id!);
+                                              scaffold.showSnackBar( const SnackBar( content: Text('Evidencia subida y tarea finalizada correctamente'),
                                                           backgroundColor: Colors.green));
 
-                                                  await provider.cargarBitacoras();
-                                                  }
-                                              }
-
+                                              await provider.cargarBitacoras();
+                                                
+                                              
                                             }
-                                          
-                                          } on TaskServiceException catch (e){
-                                             scaffold.showSnackBar(
+                                          } on TaskServiceException catch (e) {
+                                            scaffold.showSnackBar(
                                               SnackBar(
                                                 content: Text(e.message),
                                                 backgroundColor: Colors.orange,
-                                                duration: const Duration(seconds: 6),
+                                                duration:
+                                                    const Duration(seconds: 6),
                                               ),
                                             );
-                                          } catch (e, st) {
-                                            if (kDebugMode) print('Error al enviar update: $e\n$st');
-                                            scaffold.showSnackBar(
-                                              SnackBar(
-                                                content: Text('Error al enviar update: $e'),
-                                                backgroundColor: Colors.redAccent,
-                                              )
-                                            );
+                                          } catch (e) {
+                                            scaffold.showSnackBar(SnackBar(
+                                              content: Text(
+                                                  'Error al enviar update: $e'),
+                                              backgroundColor: Colors.redAccent,
+                                            ));
                                           } finally {
                                             setState(() {
                                               isLoading = false;

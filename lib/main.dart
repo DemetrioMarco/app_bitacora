@@ -15,7 +15,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<BitacoraProvider>(create: (_) => BitacoraProvider()),
-        ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()), // Se inicializa aquí
+        ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
       ],
       child: const MyApp(),
     ),
@@ -28,21 +28,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mi App',
+      title: 'MSS-PLUS',
       navigatorKey: NavigatorService.navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.teal),
-      // home ya no es estático, depende del estado del usuario
       home: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
-          // Si hay un usuario logueado, va a la lista de bitácoras, sino al login.
+          // Mientras lee el storage, muestra una pantalla de carga y evita el flasheo
+          if (userProvider.isLoading) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(color: Colors.teal),
+              ),
+            );
+          }
+          
           return userProvider.user != null
               ? const BitacorasListScreen()
               : const LoginScreen();
         },
       ),
       routes: {
-        // Mantener las rutas si las usas, pero la navegación inicial se hace con Consumer.
         '/login': (_) => const LoginScreen(),
         '/bitacoras': (_) => const BitacorasListScreen(), // Añadir ruta para BitacorasListScreen
       },

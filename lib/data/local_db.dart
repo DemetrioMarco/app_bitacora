@@ -8,7 +8,7 @@ class LocalDB {
   LocalDB._internal();
 
   static Database? _db;
-  static const _dbName = 'saferfsAPI.db';
+  static const _dbName = 'saferfsMSS.db';
   static const _dbVersion = 1;
 
   Future<Database> get db async {
@@ -21,8 +21,8 @@ class LocalDB {
     final path = join(await getDatabasesPath(), _dbName);
 
   // Se ejecuta para borrar la BD: flutter run --dart-define=RESET_DATABASE=true
-  //  const bool resetDatabase = bool.fromEnvironment('RESET_DATABASE');
-const bool resetDatabase = true;
+   const bool resetDatabase = bool.fromEnvironment('RESET_DATABASE');
+// const bool resetDatabase = true;
     if (kDebugMode && resetDatabase) {
       debugPrint('Path:\n$path');
       await deleteDatabase(path);
