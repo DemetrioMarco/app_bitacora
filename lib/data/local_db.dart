@@ -34,81 +34,18 @@ class LocalDB {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // const sql1 = '''
-    //   CREATE TABLE catalogos_version (
-    //     table_name TEXT PRIMARY KEY,
-    //     version TEXT NOT NULL,
-    //     updated_at TEXT
-    //   )
-    // ''';
-    // await db.execute(sql1);
-
-    // const sql2 = '''
-    //   CREATE TABLE areas (
-    //     id TEXT PRIMARY KEY,
-    //     nombre TEXT,
-    //     activo INTEGER,
-    //     fecha_creacion TEXT,
-    //     fecha_actualizacion TEXT
-    //   )
-    // ''';
-    // await db.execute(sql2);
-
-    // const sqlSubArea = '''
-    //   CREATE TABLE sub_area (
-    //     id TEXT PRIMARY KEY,
-    //     nombre TEXT,
-    //     activo INTEGER,
-    //     fecha_creacion TEXT,
-    //     fecha_actualizacion TEXT
-    //   )
-    // ''';
-    // await db.execute(sqlSubArea);
-
-    // await db.execute('''
-    // CREATE TABLE IF NOT EXISTS tipos_limpieza (
-    //   id INTEGER PRIMARY KEY,
-    //   nombre TEXT,
-    //   activo INTEGER,
-    //   fecha_creacion TEXT
-    // )
-    // ''');
-
-    // await db.execute('''
-    //   CREATE TABLE IF NOT EXISTS frecuencia(
-    //     id INTEGER PRIMARY KEY,
-    //     nombre TEXT
-    //   )
-    // ''');
-
-    // const sqlBitacora = '''
-    //   CREATE TABLE IF NOT EXISTS bitacoras (
-    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    //     equipo_id INTEGER NOT NULL,
-    //     equipo TEXT NOT NULL,
-    //     fecha TEXT NOT NULL,
-    //     area TEXT NOT NULL,
-    //     linea TEXT NOT NULL,
-    //     tipo_limpieza TEXT NOT NULL,
-    //     frecuencia TEXT NOT NULL,
-    //     item_monday TEXT NOT NULL,
-    //     pdf TEXT,
-    //     foto TEXT
-    //   )
-    // ''';
-    // await db.execute(sqlBitacora);
-
+    
     const sqlBitacoraAPI = '''
-  CREATE TABLE IF NOT EXISTS bitacorasAPI (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    equipo_id INTEGER NOT NULL,
-    fecha TEXT NOT NULL,
-    item_monday TEXT UNIQUE NOT NULL,
-    pdf TEXT,
-    foto TEXT
-  )
-''';
+      CREATE TABLE IF NOT EXISTS bitacorasAPI (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        equipo_id INTEGER NOT NULL,
+        fecha TEXT NOT NULL,
+        item_monday TEXT UNIQUE NOT NULL,
+        pdf TEXT,
+        foto TEXT
+      )
+    ''';
     await db.execute(sqlBitacoraAPI);
 
     const sqlEquipo = '''
@@ -219,14 +156,6 @@ class LocalDB {
       )
     ''');
 
-    // await db.execute('''
-    //   CREATE TABLE IF NOT EXISTS user(
-    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    //     username TEXT,
-    //     role TEXT,
-    //     pass TEXT
-    //   )
-    // ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldV, int newV) async {

@@ -13,7 +13,6 @@ import 'package:app_bitacora/models/equipo_elemento.dart';
 import 'package:app_bitacora/services/auth_service.dart';
 import 'package:app_bitacora/services/board_config_service.dart';
 import 'package:app_bitacora/services/navigator_service.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -26,8 +25,9 @@ class TaskServiceException implements Exception {
 }
 
 class TaskService {
-  TaskService._();
-  static final TaskService instance = TaskService._();
+  TaskService(this._authService);
+
+  final AuthService _authService;
 
   final BitacoraAPIController _bitacoraController = BitacoraAPIController();
   final EquipoAPIController _equipoController = EquipoAPIController();
@@ -38,66 +38,69 @@ class TaskService {
   static const String _evidencia = '${Env.apiBaseUrl}${Env.evidenciaPath}';
   static const Duration _timeout = Duration(seconds: 30);
 
-  // --- Helpers Privados ---
-
   Future<Map<String, String>> _getHeaders() async {
-    final token = await AuthService.instance.getAccessToken();
+    final token = await _authService.getAccessToken();
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
-  /// Ejecuta una petición y si falla por 401/403, refresca el token e intenta de nuevo.
-  Future<http.Response> _sendWithRetry(Future<http.Response> Function() action) async {
+  Future<http.Response> _sendWithRetry(
+    Future<http.Response> Function() action,
+  ) async {
     var response = await action().timeout(_timeout);
 
     if (response.statusCode == 401 || response.statusCode == 403) {
       if (kDebugMode) print('Token expirado, intentando refresh...');
-      
-      final newToken = await AuthService.instance.refresh();
-      if (newToken != null) {
+
+      try {
+        await _authService.refresh();
         response = await action().timeout(_timeout);
-      } else {
-        await AuthService.instance.logout();
+      } catch (e) {
+        await _authService.logout();
         NavigatorService.navigateToLogin();
-        throw TaskServiceException('Sesión expirada permanentemente.', statusCode: 401);
+        throw TaskServiceException(
+          'Sesión expirada permanentemente.',
+          statusCode: 401,
+        );
       }
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw TaskServiceException('Error del servidor: ${response.statusCode}', statusCode: response.statusCode);
+      throw TaskServiceException(
+        'Error del servidor: ${response.statusCode}',
+        statusCode: response.statusCode,
+      );
     }
-    
+
     return response;
   }
-
-  // --- Métodos Públicos ---
 
   Future<Map<String, dynamic>> fetchTareasMovil() async {
     try {
       final uri = Uri.parse('$_baseUrl/tareas/movil');
-      
+
       final response = await _sendWithRetry(() async {
         return await http.get(uri, headers: await _getHeaders());
       });
 
       final decoded = jsonDecode(response.body) as Map<String, dynamic>;
 
-      // 1. Guardar boardId
       if (decoded.containsKey('boardId') && decoded['boardId'] != null) {
         await BoardConfigService.instance.saveBoardId(decoded['boardId'] as int);
       }
 
-      // 2. Persistencia Local
       await _saveBitacorasFromTareas(decoded);
       await _saveEquiposFromResponse(decoded);
       await _saveElementosFromResponse(decoded);
       await _saveRelacionesFromResponse(decoded);
 
-      // 3. Confirmar recepción al servidor
       if (decoded['boardId'] != null && decoded['tareas'] != null) {
-        await _confirmarTareas(decoded['boardId'] as int, decoded['tareas'] as List<dynamic>);
+        await _confirmarTareas(
+          decoded['boardId'] as int,
+          decoded['tareas'] as List<dynamic>,
+        );
       }
 
       return decoded;
@@ -118,12 +121,12 @@ class TaskService {
       final response = await _sendWithRetry(() async {
         final request = http.MultipartRequest('POST', url);
         final headers = await _getHeaders();
-        headers.remove('Content-Type'); // Multipart lo genera solo
+        headers.remove('Content-Type');
         request.headers.addAll(headers);
-        
+
         request.files.add(await http.MultipartFile.fromPath('pdf', pdfPath));
         request.files.add(await http.MultipartFile.fromPath('photo', photoPath));
-        
+
         final streamed = await request.send().timeout(const Duration(minutes: 2));
         return await http.Response.fromStream(streamed);
       });
@@ -150,8 +153,6 @@ class TaskService {
       throw TaskServiceException('Error al actualizar estado: $e');
     }
   }
-
-  // --- Métodos de Persistencia Local (Se mantienen igual) ---
 
   Future<void> _confirmarTareas(int boardId, List<dynamic> tareas) async {
     if (tareas.isEmpty) return;
@@ -204,7 +205,7 @@ class TaskService {
       );
 
       await _bitacoraController.saveBitacoraLocal(bitacora);
-      if (kDebugMode)print('Bitácora guardada: itemMonday=$itemMonday, equipoId=$equipoId');
+      if (kDebugMode) print('Bitácora guardada: itemMonday=$itemMonday, equipoId=$equipoId');
     }
   }
 
@@ -235,18 +236,21 @@ class TaskService {
   Future<void> _saveRelacionesFromResponse(Map<String, dynamic> decoded) async {
     final relaciones = decoded['relaciones'] as List<dynamic>? ?? [];
     final existentes = await _relacionController.getAllRelacionesLocal();
-    final paresExistentes = existentes.map((r) => '${r.equipoId}-${r.elementoId}').toSet();
+    final paresExistentes =
+        existentes.map((r) => '${r.equipoId}-${r.elementoId}').toSet();
 
     for (final rel in relaciones) {
       final eId = int.tryParse(rel['equipoId'].toString());
       final elId = int.tryParse(rel['elementoId'].toString());
       if (eId == null || elId == null || paresExistentes.contains('$eId-$elId')) continue;
 
-      await _relacionController.saveRelacionLocal(EquipoElemento(
-        equipoId: eId,
-        elementoId: elId,
-        orden: int.tryParse(rel['orden'].toString()) ?? 0,
-      ));
+      await _relacionController.saveRelacionLocal(
+        EquipoElemento(
+          equipoId: eId,
+          elementoId: elId,
+          orden: int.tryParse(rel['orden'].toString()) ?? 0,
+        ),
+      );
     }
   }
 }

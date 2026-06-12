@@ -1,5 +1,3 @@
-// lib/services/sync_service.dart (fragmento a añadir/ajustar)
-
 import 'dart:convert';
 import '../data/repositories/cat_repo.dart';
 import '../models/area.dart';

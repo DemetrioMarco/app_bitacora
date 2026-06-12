@@ -1,39 +1,66 @@
 import 'package:app_bitacora/models/app_user.dart';
 import 'package:app_bitacora/services/auth_service.dart';
+import 'package:app_bitacora/utils/exceptions.dart';
 import 'package:flutter/material.dart';
 
 class UserProvider extends ChangeNotifier {
-  AppUser? _user;
-  bool _isLoading = true; // Nueva variable de estado
-
-  AppUser? get user => _user;
-  bool get isLoading => _isLoading;
-
-  UserProvider() {
+  UserProvider(this._authService) {
     _initializeUser();
   }
 
+  final AuthService _authService;
+
+  AppUser? _user;
+  bool _isLoading = true;
+
+  AppUser? get user => _user;
+  bool get isLoading => _isLoading;
+  bool get isLoggedIn => _user != null;
+
   Future<void> _initializeUser() async {
     try {
-      _user = await AuthService.instance.getCurrentUser();
+      final hasSession = await _authService.hasSession();
+
+      if (!hasSession) {
+        _user = null;
+        return;
+      }
+
+      _user = await _authService.getCurrentUser();
+    } on AppException catch (e) {
+      debugPrint('Error inicializando usuario: ${e.userMessage}');
+      _user = null;
     } catch (e) {
-      debugPrint("Error inicializando usuario: $e");
-      await AuthService.instance.logout();
+      debugPrint('Error inicializando usuario: $e');
       _user = null;
     } finally {
-      _isLoading = false; 
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> loginUser(AppUser user) async {
-    _user = user;
+  Future<void> setUserFromLogin(AppUser userData) async {
+    _user = userData;
     notifyListeners();
   }
 
+  Future<void> refreshUserFromStorage() async {
+    try {
+      _user = await _authService.getCurrentUser();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error recargando usuario: $e');
+    }
+  }
+
   Future<void> logout() async {
-    await AuthService.instance.logout();
-    _user = null;
-    notifyListeners();
+    try {
+      await _authService.logout();
+    } catch (e) {
+      debugPrint('Error cerrando sesión: $e');
+    } finally {
+      _user = null;
+      notifyListeners();
+    }
   }
 }
