@@ -292,7 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '© Maxival - V.3.2',
+                      '© Maxival - V.3.2.1',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 13,

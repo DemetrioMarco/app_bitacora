@@ -60,7 +60,7 @@ pdf.addPage(
                 pw.Text('Equipo:',
                     style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 4),
-                pw.Text(bitacora.nombreEquipo ?? '-', style: const pw.TextStyle(fontSize: 12)),
+                pw.Text(bitacora.nombre, style: const pw.TextStyle(fontSize: 12)),
               ],
             ),
           ),
